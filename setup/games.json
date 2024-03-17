@@ -1,0 +1,22 @@
+{
+    "Steam": {
+        "windows_package": "steam",
+        "linux_package": "steam"
+    },
+    "Visual Studio Code": {
+        "windows_package": "vscode",
+        "linux_package": "code"
+    },
+    "Notepad++": {
+        "windows_package": "notepadplusplus",
+        "linux_package": "Not applicable"
+    },
+    "Google Chrome": {
+        "windows_package": "googlechrome",
+        "linux_package": "google-chrome"
+    },
+    "GOG": {
+        "windows_package": "goggalaxy",
+        "linux_package": "Not applicable"
+    }
+}

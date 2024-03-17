@@ -1,0 +1,62 @@
+{
+    "Visual Studio Code": {
+        "windows_package": "vscode",
+        "linux_package": "code",
+        "linux_repo": null
+    },
+    "DBeaver": {
+        "windows_package": "dbeaver",
+        "linux_package": "dbeaver-ce",
+        "linux_repo": null
+    },
+    "Postman": {
+        "windows_package": "postman",
+        "linux_package": "postman",
+        "linux_repo": null
+    },
+    "Notepad++": {
+        "windows_package": "notepadplusplus",
+        "linux_package": "notepadqq",
+        "linux_repo": "ppa:notepadqq-team/notepadqq"
+    },
+    "Beyond Compare": {
+        "windows_package": "beyondcompare",
+        "linux_package": "bcompare",
+        "linux_repo": null
+    },
+    "Google Chrome": {
+        "windows_package": "googlechrome",
+        "linux_package": "google-chrome",
+        "linux_repo": null
+    },
+    "OpenLens": {
+        "windows_package": "openlens",
+        "linux_package": "openlens",
+        "linux_repo": null
+    },
+    "Chocolatey GUI": {
+        "windows_package": "chocolateygui",
+        "linux_package": null,
+        "linux_repo": null
+    },
+    "Steam": {
+        "windows_package": "steam",
+        "linux_package": "steam",
+        "linux_repo": null
+    },
+    "GOG": {
+        "windows_package": "goggalaxy",
+        "linux_package": null,
+        "linux_repo": null
+    },
+    "VCMI": {
+        "windows_package": "vcmi",
+        "linux_package": "vcmi",
+        "linux_repo": null
+    },
+    "Ditto":{
+        "windows_package": "ditto",
+        "linux_package": "copyq",
+        "linux_repo": null
+   }
+}

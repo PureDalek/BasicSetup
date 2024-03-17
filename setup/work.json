@@ -1,0 +1,45 @@
+{
+    "Visual Studio Code": {
+        "windows_package": "vscode",
+        "linux_package": "code"
+    },
+    "DBeaver": {
+        "windows_package": "dbeaver",
+        "linux_package": "dbeaver-ce"
+    },
+    "Postman": {
+        "windows_package": "postman",
+        "linux_package": "postman"
+    },
+    "Notepad++": {
+        "windows_package": "notepadplusplus",
+        "linux_package": "notepadqq",
+        "linux_repo": "ppa:notepadqq-team/notepadqq"
+    },
+    "Beyond Compare": {
+        "windows_package": "beyondcompare",
+        "linux_package": "bcompare"
+    },
+    "Google Chrome": {
+        "windows_package": "googlechrome",
+        "linux_package": "google-chrome"
+    },
+    "OpenLens": {
+        "windows_package": "openlens",
+        "linux_package": "openlens"
+    },
+    "Chocolatey GUI": {
+        "windows_package": "chocolateygui",
+        "linux_package": "Not applicable"
+    },
+    "Ditto":{
+        "windows_package": "ditto",
+        "linux_package": "copyq",
+        "linux_repo": null
+   },
+   "git":{
+       "windows_package": "git",
+       "linux_package": "git",
+       "linux_repo": null
+  }
+}
