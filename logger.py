@@ -13,7 +13,7 @@ def configure_logger(logger_name, log_file_path, log_level=logging.INFO):
     Returns:
     - logging.Logger: Configured logger instance.
     """
-
+    
     # Create a logger object
     logger = logging.getLogger(logger_name)
     logger.setLevel(log_level)

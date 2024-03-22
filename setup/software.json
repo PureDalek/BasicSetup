@@ -58,5 +58,27 @@
         "windows_package": "ditto",
         "linux_package": "copyq",
         "linux_repo": null
-   }
+    },
+   "7Zip":{
+    "windows_package": "7zip",
+    "linux_package": "p7zip-full",
+    "linux_repo": null
+    },
+    "git":{
+    "windows_package": "git",
+    "linux_package": "git",
+    "linux_repo": null
+    },
+    "Slack":{
+        "windows_package": "slack",
+        "linux_package": "WhatsApp",
+        "linux_repo": null,
+        "is_snap" : true
+    },
+    "awscli":{
+        "windows_package": "awscli",
+        "linux_package": "awscli",
+        "linux_repo": null,
+        "is_snap" : false
+    }
 }

@@ -24,6 +24,7 @@ class SoftwareInstaller:
             subprocess.run(f"choco install {self.windows_package} -y", shell=True)
         elif platform.system() == "Linux":
             dist_name, _, _ = platform.linux_distribution()
+            #TODO add sanp store support 
             if "Ubuntu" in dist_name or "Debian" in dist_name:
                 self.add_linux_repo()
                 subprocess.run(f"sudo apt-get install {self.linux_package} -y", shell=True)
