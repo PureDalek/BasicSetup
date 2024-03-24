@@ -41,8 +41,8 @@ if "%INSTALLED_VERSION%"=="3.12.0" (
     set PATH=%PATH%;C:\Python312;C:\Python312\Scripts;
 )
 
-:: Running setup.py
-echo Running setup.py...
-python setup.py
+:: Running program_setup.py
+echo Running program_setup.py...
+python program_setup.py
 
 exit

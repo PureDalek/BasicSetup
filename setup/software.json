@@ -80,5 +80,11 @@
         "linux_package": "awscli",
         "linux_repo": null,
         "is_snap" : false
+    },
+    "Data Grip":{
+        "windows_package": "datagrip",
+        "linux_package": "datagrip",
+        "linux_repo": null,
+        "is_snap" : false
     }
 }

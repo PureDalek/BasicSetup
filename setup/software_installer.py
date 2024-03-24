@@ -2,6 +2,11 @@
 import subprocess
 import platform
 import sys
+import os
+
+
+script_path = __file__
+script_dir = os.path.dirname(os.path.abspath(script_path))
 
 class SoftwareInstaller:
     def __init__(self, software_name, windows_package, linux_package,linux_repo=None):
@@ -21,10 +26,10 @@ class SoftwareInstaller:
     def install(self):
         """Install the software using the appropriate package manager."""
         if platform.system() == "Windows":
-            subprocess.run(f"choco install {self.windows_package} -y", shell=True)
+            subprocess.run(['powershell.exe', '-ExecutionPolicy', 'Bypass', '-File', os.path.join(script_dir, 'Elevate.ps1'), self.windows_package], shell=True)
         elif platform.system() == "Linux":
             dist_name, _, _ = platform.linux_distribution()
-            #TODO add sanp store support 
+            #TODO add sanp store suppor
             if "Ubuntu" in dist_name or "Debian" in dist_name:
                 self.add_linux_repo()
                 subprocess.run(f"sudo apt-get install {self.linux_package} -y", shell=True)
