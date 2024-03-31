@@ -25,6 +25,9 @@ class SetupManager:
             if software_name in self.blueprint[blueprint_name]:
                 installer = SoftwareInstaller(software_name, config["windows_package"], config["linux_package"])
                 installer.install()
+        self.done_window(f"{blueprint_name} Installation Completed")
+                
+
 
     def define_custom(self, instance):
         for software_name in self.software_config.keys():
@@ -32,6 +35,13 @@ class SetupManager:
             cb = Checkbutton(instance, text=software_name, variable=var, onvalue=1, offvalue=0, command=self.save_to_custom_list)
             cb.pack()
             self.checkbuttons[software_name] = var
+
+    def done_window(self,name):
+        done_window = Toplevel(self.tk)
+        done_window.title(name)
+        done_window.geometry(f"200x200")
+        button = Button(done_window, text=f"Done", command=done_window.destroy)
+        button.pack(pady=10)
 
     def save_to_custom_list(self):
         # Example of how to access the states

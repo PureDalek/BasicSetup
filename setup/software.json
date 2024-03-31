@@ -92,5 +92,30 @@
         "linux_package": "MobaXTerm",
         "linux_repo": null,
         "is_snap" : false
+    },
+    "OpenSSH":{
+        "windows_package": "OpenSSH",
+        "linux_package": "OpenSSH",
+        "linux_repo": null,
+        "is_snap" : false
+    },
+    "Putty":{
+        "windows_package": "putty",
+        "linux_package": "putty",
+        "linux_repo": null,
+        "is_snap" : false
+    },
+    "YouTube Music":{
+        "windows_package": "th-ch-youtube-music",
+        "linux_package": "",
+        "linux_repo": null,
+        "is_snap" : false
+    },
+    "Remote Desktop Manager":{
+        "windows_package": "rdm",
+        "linux_package": "rdm",
+        "linux_repo": null,
+        "is_snap" : false,
+        "from_site": "https://devolutions.net/remote-desktop-manager/home/downloadfree/"
     }
 }
