@@ -117,5 +117,17 @@
         "linux_repo": null,
         "is_snap" : false,
         "from_site": "https://devolutions.net/remote-desktop-manager/home/downloadfree/"
+    },
+    "Node JS":{
+        "windows_package": "nodejs",
+        "linux_package": "nodejs",
+        "linux_repo": null,
+        "is_snap" : false
+    },
+    "Docker ":{
+        "windows_package": "docker-desktop",
+        "linux_package": "docker",
+        "linux_repo": null,
+        "is_snap" : false
     }
 }

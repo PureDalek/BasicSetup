@@ -26,7 +26,7 @@ class SoftwareInstaller:
     def install(self):
         """Install the software using the appropriate package manager."""
         if platform.system() == "Windows":
-            subprocess.run(['powershell.exe', '-ExecutionPolicy', 'Bypass', '-File', os.path.join(script_dir, 'Elevate.ps1'), self.windows_package], shell=True)
+            subprocess.run(['powershell.exe', '-File', os.path.join(script_dir, 'Elevate.ps1'), self.windows_package], shell=True)
         elif platform.system() == "Linux":
             dist_name, _, _ = platform.linux_distribution()
             #TODO add sanp store suppor

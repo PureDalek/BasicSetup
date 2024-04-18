@@ -23,26 +23,37 @@ if '%errorlevel%' NEQ '0' (
     CD /D "%~dp0"
 :--------------------------------------
 
+@echo off
+setlocal EnableDelayedExpansion
+
 :: Check if Python is already installed and matches the desired version
 echo Checking for Python installation...
 for /f "delims=" %%i in ('python --version 2^>^&1') do set PYTHON_VERSION=%%i
-echo Found %PYTHON_VERSION%
+echo Found !PYTHON_VERSION!
 
-:: Extract the version number and compare
-for /f "tokens=2 delims= " %%a in ("%PYTHON_VERSION%") do set INSTALLED_VERSION=%%a
-if "%INSTALLED_VERSION%"=="3.12.0" (
-    echo Python 3.12 is already installed.
+:: Extract the major and minor version number
+for /f "tokens=2 delims= " %%a in ("!PYTHON_VERSION!") do set INSTALLED_VERSION=%%a
+for /f "tokens=1,2 delims=." %%b in ("!INSTALLED_VERSION!") do (
+    set MAJOR_VERSION=%%b
+    set MINOR_VERSION=%%c
+)
+
+:: Check if the major version is 3 and minor version is at least 12
+if "!MAJOR_VERSION!"=="3" if !MINOR_VERSION! GEQ 12 (
+    echo Python 3.12 or newer is already installed.
 ) else (
     echo Installing Python 3.12...
     powershell -NoProfile -ExecutionPolicy Bypass -Command "choco install python --version=3.12 -y"
 
     :: Add Python to the PATH
     :: Note: Adjust the Python path according to the specific version installed and the default Chocolatey install path
-    set PATH=%PATH%;C:\Python312;C:\Python312\Scripts;
+    set PATH=!PATH!;C:\Python312;C:\Python312\Scripts;
 )
 
 :: Running program_setup.py
 echo Running program_setup.py...
 python program_setup.py
 
+endlocal
 exit
+
