@@ -124,6 +124,12 @@
         "linux_repo": null,
         "is_snap" : false
     },
+    "Proton VPn":{
+        "windows_package": "protonvpn",
+        "linux_package": "protonvpn",
+        "linux_repo": null,
+        "is_snap" : false
+    },
     "Docker ":{
         "windows_package": "docker-desktop",
         "linux_package": "docker",
