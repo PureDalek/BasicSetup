@@ -130,6 +130,20 @@
         "linux_repo": null,
         "is_snap" : false
     },
+    "Playnite":{
+        "windows_package": "playnite",
+        "linux_package": "playnite",
+        "linux_repo": null,
+        "is_snap" : false
+    }, 
+    "Clickup":{
+        "windows_package": "ClickUp",
+        "linux_package": "Clickup"
+    },
+    "Gimp":{
+        "windows_package": "gimp",
+        "linux_package": "gimp"
+    },
     "Docker ":{
         "windows_package": "docker-desktop",
         "linux_package": "docker",
