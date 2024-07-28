@@ -6,7 +6,7 @@ class SetupManager:
     def __init__(self, master):
         self.tk = master
         self.tk.title("Setup Selection")
-        self.tk.geometry("400x200")  # Set the window size to 400x200
+        self.tk.geometry("400x400")  # Set the window size to 400x200
         self.software_config = self.load_software_config("software.json")
         self.blueprint = self.load_software_config("blueprint.config")
         self.checkbuttons = {}

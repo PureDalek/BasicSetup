@@ -141,7 +141,7 @@
         "linux_package": "Clickup"
     },
     "Gimp":{
-        "windows_package": "gimp",
+        "windows_package": "gimp --version=2.10.4",
         "linux_package": "gimp"
     },
     "Docker ":{

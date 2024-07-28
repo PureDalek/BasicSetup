@@ -1,2 +1,2 @@
 easygui
-dotenv
+python-dotenv
