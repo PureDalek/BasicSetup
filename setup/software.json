@@ -144,10 +144,22 @@
         "windows_package": "gimp --version=2.10.4",
         "linux_package": "gimp"
     },
-    "Docker ":{
+    "Docker":{
         "windows_package": "docker-desktop",
         "linux_package": "docker",
         "linux_repo": null,
         "is_snap" : false
+    },
+    "Helm ":{
+        "windows_package": "kubernetes-helm",
+        "linux_package": "helm",
+        "linux_repo": null,
+        "is_snap" : false
+    },
+    "Tilt ":{
+        "windows_package": "tilt",
+        "linux_package": "tilt",
+        "linux_repo": null,
+        "is_snap" : true
     }
 }
