@@ -26,6 +26,21 @@ if '%errorlevel%' NEQ '0' (
 @echo off
 setlocal EnableDelayedExpansion
 
+
+:: Check if Chocolatey is installed
+where choco >nul 2>nul
+if %errorlevel% NEQ 0 (
+    echo Chocolatey not found. Installing Chocolatey...
+    powershell -NoProfile -ExecutionPolicy Bypass -Command ^
+        "Set-ExecutionPolicy Bypass -Scope Process -Force; ^
+        [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; ^
+        iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))"
+) else (
+    echo Chocolatey is already installed.
+)
+
+
+
 :: Check if Python is already installed and matches the desired version
 echo Checking for Python installation...
 for /f "delims=" %%i in ('python --version 2^>^&1') do set PYTHON_VERSION=%%i
