@@ -54,112 +54,112 @@
         "linux_package": "vcmi",
         "linux_repo": null
     },
-    "Ditto":{
+    "Ditto": {
         "windows_package": "ditto",
         "linux_package": "copyq",
         "linux_repo": null
     },
-   "7Zip":{
-    "windows_package": "7zip",
-    "linux_package": "p7zip-full",
-    "linux_repo": null
+    "7Zip": {
+        "windows_package": "7zip",
+        "linux_package": "p7zip-full",
+        "linux_repo": null
     },
-    "git":{
-    "windows_package": "git",
-    "linux_package": "git",
-    "linux_repo": null
+    "git": {
+        "windows_package": "git",
+        "linux_package": "git",
+        "linux_repo": null
     },
-    "Slack":{
+    "Slack": {
         "windows_package": "slack",
-        "linux_package": "WhatsApp",
+        "linux_package": "slack",
         "linux_repo": null,
-        "is_snap" : true
+        "is_snap": true
     },
-    "awscli":{
+    "awscli": {
         "windows_package": "awscli",
         "linux_package": "awscli",
         "linux_repo": null,
-        "is_snap" : false
+        "is_snap": false
     },
-    "Data Grip":{
+    "Data Grip": {
         "windows_package": "datagrip",
         "linux_package": "datagrip",
         "linux_repo": null,
-        "is_snap" : false
+        "is_snap": false
     },
-    "MobaXtrem":{
-        "windows_package": "MobaXTerm",
-        "linux_package": "MobaXTerm",
+    "MobaXtrem": {
+        "windows_package": "mobaxterm",
+        "linux_package": null,
         "linux_repo": null,
-        "is_snap" : false
+        "is_snap": false
     },
-    "OpenSSH":{
-        "windows_package": "OpenSSH",
-        "linux_package": "OpenSSH",
+    "OpenSSH": {
+        "windows_package": "openssh",
+        "linux_package": "openssh-server",
         "linux_repo": null,
-        "is_snap" : false
+        "is_snap": false
     },
-    "Putty":{
+    "Putty": {
         "windows_package": "putty",
         "linux_package": "putty",
         "linux_repo": null,
-        "is_snap" : false
+        "is_snap": false
     },
-    "YouTube Music":{
+    "YouTube Music": {
         "windows_package": "th-ch-youtube-music",
-        "linux_package": "",
+        "linux_package": null,
         "linux_repo": null,
-        "is_snap" : false
+        "is_snap": false
     },
-    "Remote Desktop Manager":{
+    "Remote Desktop Manager": {
         "windows_package": "rdm",
-        "linux_package": "rdm",
+        "linux_package": null,
         "linux_repo": null,
-        "is_snap" : false,
+        "is_snap": false,
         "from_site": "https://devolutions.net/remote-desktop-manager/home/downloadfree/"
     },
-    "Node JS":{
+    "Node JS": {
         "windows_package": "nodejs",
         "linux_package": "nodejs",
         "linux_repo": null,
-        "is_snap" : false
+        "is_snap": false
     },
-    "Proton VPn":{
+    "Proton VPn": {
         "windows_package": "protonvpn",
         "linux_package": "protonvpn",
         "linux_repo": null,
-        "is_snap" : false
+        "is_snap": false
     },
-    "Playnite":{
+    "Playnite": {
         "windows_package": "playnite",
-        "linux_package": "playnite",
+        "linux_package": null,
         "linux_repo": null,
-        "is_snap" : false
-    }, 
-    "Clickup":{
-        "windows_package": "ClickUp",
-        "linux_package": "Clickup"
+        "is_snap": false
     },
-    "Gimp":{
+    "Clickup": {
+        "windows_package": "clickup",
+        "linux_package": "clickup"
+    },
+    "Gimp": {
         "windows_package": "gimp --version=2.10.4",
         "linux_package": "gimp"
     },
-    "Docker":{
+    "Docker": {
         "windows_package": "docker-desktop",
-        "linux_package": "docker",
+        "linux_package": "docker.io",
         "linux_repo": null,
-        "is_snap" : false
+        "is_snap": false
     },
-    "Helm ":{
+    "Helm": {
         "windows_package": "kubernetes-helm",
         "linux_package": "helm",
         "linux_repo": null,
-        "is_snap" : false
+        "is_snap": false
     },
-    "Tilt ":{
+    "Tilt": {
         "windows_package": "tilt",
         "linux_package": "tilt",
         "linux_repo": null,
-        "is_snap" : true
+        "is_snap": true
     }
 }
