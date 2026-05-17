@@ -1,0 +1,41 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: write
+
+jobs:
+  build-release:
+    name: Build release package
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Create release package
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $packageDirectory = "dist/BasicSetup"
+          New-Item -ItemType Directory -Force -Path $packageDirectory | Out-Null
+
+          Copy-Item -Path "setup" -Destination $packageDirectory -Recurse
+          Copy-Item -Path "README.md" -Destination $packageDirectory
+          Copy-Item -Path "CHANGELOG.md" -Destination $packageDirectory
+          Copy-Item -Path "requirements.txt" -Destination $packageDirectory
+
+          Compress-Archive `
+            -Path "$packageDirectory/*" `
+            -DestinationPath "dist/BasicSetup-${{ github.ref_name }}.zip" `
+            -Force
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/BasicSetup-${{ github.ref_name }}.zip
+          generate_release_notes: true
