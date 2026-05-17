@@ -6,6 +6,7 @@ It provides:
 
 - A Tkinter setup UI for choosing predefined install profiles.
 - A JSON software catalog for Windows and Linux package names.
+- A local download bootstrapper for fresh Windows installs.
 - A Windows launcher with optional auto-update support.
 - Chocolatey-based Windows installs.
 - Linux installs through snap, apt, dnf, or yum where supported.
@@ -15,15 +16,16 @@ It provides:
 ```text
 BasicSetup/
 ├── setup/
-│   ├── BasicSetupLauncher.ps1     # Windows launcher with optional auto-update
-│   ├── Elevate.ps1                # Elevated Chocolatey wrapper
-│   ├── blueprint.config           # Setup profiles
-│   ├── program_setup.py           # Tkinter UI
-│   ├── run_full_setup.bat         # Windows bootstrap entrypoint
-│   ├── software.json              # Software package catalog
-│   └── software_installer.py      # Package install logic
+│   ├── BasicSetupLauncher.ps1       # Windows launcher with optional Git auto-update
+│   ├── Install-BasicSetupLocal.ps1  # Download-first Windows installer with winget dependency setup
+│   ├── Elevate.ps1                  # Elevated Chocolatey wrapper
+│   ├── blueprint.config             # Setup profiles
+│   ├── program_setup.py             # Tkinter UI
+│   ├── run_full_setup.bat           # Windows bootstrap entrypoint
+│   ├── software.json                # Software package catalog
+│   └── software_installer.py        # Package install logic
 ├── tests/
-│   └── test_basicsetup_config.py  # Config and installer tests
+│   └── test_basicsetup_config.py    # Config and installer tests
 └── requirements.txt
 ```
 
@@ -33,7 +35,8 @@ BasicSetup/
 
 - Windows 10 or newer
 - PowerShell
-- Git, for launcher auto-update support
+- winget, optional but recommended for the local bootstrapper
+- Git, optional for launcher auto-update support
 - Chocolatey, installed automatically by `run_full_setup.bat` when missing
 - Python 3.12 or newer, installed automatically by `run_full_setup.bat` when missing
 
@@ -46,9 +49,63 @@ BasicSetup/
   - `dnf`
   - `yum`
 
-## Quick start on Windows
+## Best fresh Windows install
+
+This option does not require Git to download BasicSetup. It downloads the repository ZIP locally, installs base dependencies through winget when available, then launches the setup flow.
 
 From PowerShell:
+
+```powershell
+$installerPath = "$env:TEMP\Install-BasicSetupLocal.ps1"
+Invoke-WebRequest `
+    -Uri "https://raw.githubusercontent.com/PureDalek/BasicSetup/main/setup/Install-BasicSetupLocal.ps1" `
+    -OutFile $installerPath
+
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File $installerPath
+```
+
+By default, this installs the repo into:
+
+```powershell
+$env:LOCALAPPDATA\BasicSetup
+```
+
+### Local installer options
+
+Install from a different branch:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File $installerPath -Branch "main"
+```
+
+Use a custom install directory:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File $installerPath -InstallDirectory "C:\Tools\BasicSetup"
+```
+
+Skip winget bootstrap:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File $installerPath -SkipWingetBootstrap
+```
+
+Skip dependency installation:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File $installerPath -SkipDependencyInstall
+```
+
+Download only, without launching setup:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File $installerPath -NoLaunch
+```
+
+## Git auto-update launcher
+
+Use this when BasicSetup already exists locally as a Git checkout.
 
 ```powershell
 Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force
@@ -61,26 +118,6 @@ The launcher will:
 2. Pull the latest changes with Git when possible.
 3. Start `setup/run_full_setup.bat`.
 4. Launch the setup UI.
-
-## Install from a fresh Windows machine
-
-Download the launcher first, then run it:
-
-```powershell
-$launcherPath = "$env:TEMP\BasicSetupLauncher.ps1"
-Invoke-WebRequest `
-    -Uri "https://raw.githubusercontent.com/PureDalek/BasicSetup/main/setup/BasicSetupLauncher.ps1" `
-    -OutFile $launcherPath
-
-Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File $launcherPath
-```
-
-By default, the launcher clones or updates this repository into:
-
-```powershell
-$env:LOCALAPPDATA\BasicSetup
-```
 
 ## Launcher options
 
