@@ -13,6 +13,7 @@ All notable changes to BasicSetup will be documented in this file.
 - Added Lens to the optional catalog.
 - Added GUI profile saving/deleting backed by `setup/blueprint.config`.
 - Added catalog scanning to save already-installed catalog apps as a profile.
+- Added GUI profile publishing to commit and push saved profile JSON for reuse on other PCs.
 - Added update restart/relaunch support after applying an update.
 - Added `ROADMAP.md` with concrete next-step ideas for catalog editing, Git-backed saves, versioning, and safer installs.
 - Rebuilt the Tkinter GUI with profile selection, custom package selection, background installs, per-package status, and dry-run mode.

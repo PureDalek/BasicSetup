@@ -4,6 +4,7 @@ import json
 import sys
 from pathlib import Path
 from unittest.mock import patch
+from subprocess import CompletedProcess
 
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
@@ -180,6 +181,36 @@ def test_program_setup_relaunch_preserves_dry_run_flag() -> None:
     command_arguments = popen_mock.call_args.args[0]
     assert command_arguments[-1] == "--dry-run"
     assert command_arguments[-2].endswith("program_setup.py")
+
+
+def test_program_setup_publishes_profile_changes_to_git() -> None:
+    """Verify profile publishing stages only profile JSON, commits, and pushes."""
+    sys.path.insert(0, str(SETUP_DIRECTORY))
+
+    import program_setup
+
+    calls: list[list[str]] = []
+
+    def fake_run_git_command(arguments: list[str]) -> CompletedProcess[str]:
+        calls.append(arguments)
+        if arguments[:3] == ["status", "--porcelain", "--"]:
+            return CompletedProcess(args=arguments, returncode=0, stdout=" M setup/blueprint.config\n", stderr="")
+        if arguments == ["branch", "--show-current"]:
+            return CompletedProcess(args=arguments, returncode=0, stdout="codex/test\n", stderr="")
+
+        return CompletedProcess(args=arguments, returncode=0, stdout="", stderr="")
+
+    with (
+        patch.object(program_setup.shutil, "which", return_value="git"),
+        patch.object(program_setup, "run_git_command", side_effect=fake_run_git_command),
+    ):
+        status, detail = program_setup.publish_profiles_to_git("My PC")
+
+    assert status == "Published"
+    assert "My PC" in detail
+    assert ["add", str(program_setup.BLUEPRINT_CONFIG_PATH)] in calls
+    assert ["commit", "-m", "Save setup profile My PC", "--", str(program_setup.BLUEPRINT_CONFIG_PATH)] in calls
+    assert ["push", "-u", "origin", "codex/test"] in calls
 
 
 def test_linux_installer_uses_snap_for_snap_packages() -> None:

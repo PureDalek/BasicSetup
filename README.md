@@ -138,7 +138,7 @@ The default install surface is intentionally small. Basic profiles include:
 
 Use the `Catalog` tab and `Load More Catalog` button to pull in optional apps such as RustDesk, Claude, LM Studio, Slack, remote tools, and additional developer utilities. Selected catalog apps can be added to the custom install list.
 
-Custom selections can be saved as profiles. Profiles are stored in `setup/blueprint.config`, so changes are visible in Git and can be reviewed in a PR.
+Custom selections can be saved as profiles. Profiles are stored in `setup/blueprint.config`, so changes are visible in Git and can be reviewed in a PR. After saving a profile, the GUI can commit and push that profile JSON to the current branch so it is available on another PC.
 
 The `Catalog` tab can also scan the loaded catalog for apps already installed on the PC and save those installed apps as a new profile.
 

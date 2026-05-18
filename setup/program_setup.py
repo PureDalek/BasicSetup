@@ -114,6 +114,41 @@ def run_git_command(arguments: list[str]) -> subprocess.CompletedProcess[str]:
     )
 
 
+def publish_profiles_to_git(profile_name: str) -> tuple[str, str]:
+    if not shutil.which("git"):
+        return ("Unavailable", "Git was not found.")
+
+    if not (REPOSITORY_ROOT / ".git").exists():
+        return ("Unavailable", "This folder is not a Git checkout.")
+
+    status_result = run_git_command(["status", "--porcelain", "--", str(BLUEPRINT_CONFIG_PATH)])
+    if status_result.returncode != 0:
+        return ("Failed", status_result.stderr.strip() or "Could not inspect profile changes.")
+
+    if not status_result.stdout.strip():
+        return ("Up to date", "No profile changes need to be committed.")
+
+    add_result = run_git_command(["add", str(BLUEPRINT_CONFIG_PATH)])
+    if add_result.returncode != 0:
+        return ("Failed", add_result.stderr.strip() or "Could not stage profile changes.")
+
+    commit_message = f"Save setup profile {profile_name}"
+    commit_result = run_git_command(["commit", "-m", commit_message, "--", str(BLUEPRINT_CONFIG_PATH)])
+    if commit_result.returncode != 0:
+        return ("Failed", commit_result.stderr.strip() or "Could not commit profile changes.")
+
+    branch_result = run_git_command(["branch", "--show-current"])
+    if branch_result.returncode != 0 or not branch_result.stdout.strip():
+        return ("Committed", "Profile was committed locally, but no current branch was available to push.")
+
+    branch_name = branch_result.stdout.strip()
+    push_result = run_git_command(["push", "-u", "origin", branch_name])
+    if push_result.returncode != 0:
+        return ("Committed", push_result.stderr.strip() or "Profile was committed locally, but push failed.")
+
+    return ("Published", f"Profile '{profile_name}' was committed and pushed to {branch_name}.")
+
+
 def load_application_version(file_path: Path = VERSION_PATH) -> str:
     if not file_path.exists():
         return "0.0.0-dev"
@@ -245,6 +280,7 @@ class SetupManager:
         self.is_installing = False
         self.is_checking_installed = False
         self.is_checking_updates = False
+        self.is_publishing_profiles = False
 
         self.root.title(f"BasicSetup {self.display_version}")
         self.root.geometry("920x640")
@@ -637,6 +673,7 @@ class SetupManager:
         self._build_profile_panel()
         self._select_profile(profile_name)
         self.status_label.configure(text=f"Saved installed profile '{profile_name}' to blueprint.config.")
+        self.offer_profile_git_publish(profile_name)
 
     def save_custom_profile(self) -> None:
         package_names = [name for name, variable in self.custom_vars.items() if variable.get()]
@@ -665,6 +702,29 @@ class SetupManager:
         self._build_profile_panel()
         self._select_profile(profile_name)
         self.status_label.configure(text=f"Saved profile '{profile_name}' to blueprint.config.")
+        self.offer_profile_git_publish(profile_name)
+
+    def offer_profile_git_publish(self, profile_name: str) -> None:
+        should_publish = messagebox.askyesno(
+            "Save Profile to Git",
+            "Commit and push this profile so it is available on another PC?",
+        )
+        if should_publish:
+            self.publish_profile_to_git(profile_name)
+
+    def publish_profile_to_git(self, profile_name: str) -> None:
+        if self.is_publishing_profiles:
+            return
+
+        self.is_publishing_profiles = True
+        self.status_label.configure(text=f"Publishing profile '{profile_name}' to Git...")
+        worker = threading.Thread(target=self._publish_profile_to_git, args=(profile_name,), daemon=True)
+        worker.start()
+        self.root.after(100, self._drain_result_queue)
+
+    def _publish_profile_to_git(self, profile_name: str) -> None:
+        status, detail = publish_profiles_to_git(profile_name)
+        self.result_queue.put(("profile-publish", profile_name, status, detail))
 
     def delete_selected_profile(self) -> None:
         protected_profiles = {"Developer", "Games", "AI"}
@@ -888,13 +948,22 @@ class SetupManager:
                         self.root.destroy()
                 continue
 
+            if event_type == "profile-publish":
+                self.is_publishing_profiles = False
+                self.status_label.configure(text=detail)
+                if status in {"Failed", "Unavailable"}:
+                    messagebox.showerror("Save Profile to Git", detail)
+                else:
+                    messagebox.showinfo("Save Profile to Git", detail)
+                continue
+
             if event_type == "package" and package_name in self.package_table.get_children():
                 values = list(self.package_table.item(package_name, "values"))
                 values[3] = status if not detail else f"{status}: {detail}"
                 self.package_table.item(package_name, values=values)
             self.status_label.configure(text=f"{package_name}: {status}")
 
-        if self.is_installing or self.is_checking_installed or self.is_checking_updates:
+        if self.is_installing or self.is_checking_installed or self.is_checking_updates or self.is_publishing_profiles:
             self.root.after(100, self._drain_result_queue)
 
 

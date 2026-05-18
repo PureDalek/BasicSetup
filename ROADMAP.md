@@ -17,6 +17,7 @@ These are practical next steps that fit the current project shape.
 - After editing `software.json` or `blueprint.config`, run config tests, commit the JSON change, push the branch, and open a PR.
 - Store a short change note with each catalog entry so future users know why it was added.
 - Keep GUI-saved profiles in `setup/blueprint.config` so they can be reviewed as normal Git changes.
+- Add a richer publish screen that shows the Git diff before committing profile changes.
 
 ## Versioning
 
