@@ -5,6 +5,7 @@ import json
 import queue
 import shutil
 import subprocess
+import sys
 import threading
 import tkinter as tk
 import urllib.error
@@ -210,6 +211,14 @@ def update_repository(channel_name: str = "Stable") -> tuple[str, str]:
         return ("Failed", pull_result.stderr.strip() or f"Could not fast-forward from {remote_branch}.")
 
     return ("Updated", f"BasicSetup was updated from {channel_name}. Restart the GUI to load the new version.")
+
+
+def relaunch_application(dry_run: bool = False) -> None:
+    command_arguments = [sys.executable, str(SCRIPT_DIRECTORY / "program_setup.py")]
+    if dry_run:
+        command_arguments.append("--dry-run")
+
+    subprocess.Popen(command_arguments, cwd=SCRIPT_DIRECTORY)
 
 
 class SetupManager:
@@ -497,6 +506,16 @@ class SetupManager:
             column=2,
             padx=(8, 0),
         )
+        ttk.Button(toolbar, text="Scan Catalog", command=self.scan_loaded_catalog).grid(
+            row=0,
+            column=3,
+            padx=(8, 0),
+        )
+        ttk.Button(toolbar, text="Save Installed Profile", command=self.save_installed_profile).grid(
+            row=0,
+            column=4,
+            padx=(8, 0),
+        )
 
         columns = ("package", "windows", "linux", "status")
         self.catalog_table = ttk.Treeview(self.catalog_tab, columns=columns, show="headings", selectmode="extended")
@@ -577,6 +596,47 @@ class SetupManager:
 
         self.tabs.select(self.custom_tab)
         self.status_label.configure(text=f"Added {len(selected_items)} catalog app(s) to custom selection.")
+
+    def scan_loaded_catalog(self) -> None:
+        if not self.optional_catalog_loaded:
+            self.load_more_catalog()
+
+        self.check_installed_packages()
+
+    def save_installed_profile(self) -> None:
+        installed_packages = [
+            package_name
+            for package_name in self.software_catalog
+            if self.installed_status.get(package_name)
+        ]
+        if not installed_packages:
+            messagebox.showwarning(
+                "Profiles",
+                "No installed catalog apps are known yet. Run Check Installed or Scan Catalog first.",
+            )
+            return
+
+        profile_name = simpledialog.askstring("Save Installed Profile", "Profile name:", parent=self.root)
+        if not profile_name:
+            return
+
+        profile_name = profile_name.strip()
+        if not profile_name:
+            messagebox.showwarning("Profiles", "Profile name cannot be empty.")
+            return
+
+        if profile_name in self.profiles and not messagebox.askyesno(
+            "Save Installed Profile",
+            f"Replace the existing '{profile_name}' profile?",
+        ):
+            return
+
+        self.profiles[profile_name] = installed_packages
+        save_profiles(self.profiles)
+        self.selected_profile.set(profile_name)
+        self._build_profile_panel()
+        self._select_profile(profile_name)
+        self.status_label.configure(text=f"Saved installed profile '{profile_name}' to blueprint.config.")
 
     def save_custom_profile(self) -> None:
         package_names = [name for name, variable in self.custom_vars.items() if variable.get()]
@@ -819,7 +879,13 @@ class SetupManager:
                 self.update_status_label.configure(text=f"Update: {status}")
                 self.status_label.configure(text=detail)
                 if event_type == "update-apply":
-                    messagebox.showinfo("BasicSetup update", detail)
+                    should_restart = messagebox.askyesno(
+                        "BasicSetup update",
+                        f"{detail}\n\nRestart BasicSetup now?",
+                    )
+                    if should_restart:
+                        relaunch_application(self.dry_run)
+                        self.root.destroy()
                 continue
 
             if event_type == "package" and package_name in self.package_table.get_children():

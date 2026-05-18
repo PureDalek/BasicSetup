@@ -60,6 +60,11 @@
         "linux_package": null,
         "linux_repo": null
     },
+    "Lens": {
+        "windows_package": "lens",
+        "linux_package": null,
+        "linux_repo": null
+    },
     "MobaXtrem": {
         "windows_package": "mobaxterm",
         "linux_package": null,

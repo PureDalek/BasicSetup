@@ -140,6 +140,8 @@ Use the `Catalog` tab and `Load More Catalog` button to pull in optional apps su
 
 Custom selections can be saved as profiles. Profiles are stored in `setup/blueprint.config`, so changes are visible in Git and can be reviewed in a PR.
 
+The `Catalog` tab can also scan the loaded catalog for apps already installed on the PC and save those installed apps as a new profile.
+
 The GUI also checks for:
 
 - BasicSetup updates from the configured Git upstream.
@@ -153,6 +155,8 @@ The update channel selector controls which Git branch is checked:
 
 - `Stable` checks `main`.
 - `Nightly` checks the Codex PR branch for in-progress builds.
+
+After an update is applied, the GUI offers to restart and relaunch itself.
 
 ## Git auto-update launcher
 

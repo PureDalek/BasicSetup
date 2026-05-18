@@ -9,6 +9,7 @@ These are practical next steps that fit the current project shape.
 - Validate package IDs by running package-manager search commands before saving.
 - Keep a dry-run preview that shows the exact JSON diff before changing files.
 - Consider a user catalog file for private entries that should not be committed upstream.
+- Improve installed-app scanning with richer package-manager metadata and fuzzy matching for apps outside the catalog.
 
 ## Git-backed saves
 

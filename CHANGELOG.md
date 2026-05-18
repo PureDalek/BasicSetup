@@ -10,7 +10,10 @@ All notable changes to BasicSetup will be documented in this file.
 - Added GUI update channel selection with `Stable` mapped to `main` and `Nightly` mapped to the Codex PR branch.
 - Added a built-in `AI` profile for ChatGPT, Codex, Ollama, and supporting developer tools.
 - Added an optional catalog view with on-demand catalog loading and RustDesk support.
+- Added Lens to the optional catalog.
 - Added GUI profile saving/deleting backed by `setup/blueprint.config`.
+- Added catalog scanning to save already-installed catalog apps as a profile.
+- Added update restart/relaunch support after applying an update.
 - Added `ROADMAP.md` with concrete next-step ideas for catalog editing, Git-backed saves, versioning, and safer installs.
 - Rebuilt the Tkinter GUI with profile selection, custom package selection, background installs, per-package status, and dry-run mode.
 - Added GUI update checks with a manual fast-forward update action.

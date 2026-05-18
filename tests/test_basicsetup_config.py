@@ -34,6 +34,7 @@ def test_optional_catalog_json_is_valid() -> None:
 
     assert isinstance(optional_catalog, dict)
     assert "RustDesk" in optional_catalog
+    assert "Lens" in optional_catalog
 
 
 def test_blueprint_config_is_valid() -> None:
@@ -165,6 +166,20 @@ def test_program_setup_update_channels_map_to_expected_branches() -> None:
     assert program_setup.update_channel_branch("Stable") == "main"
     assert program_setup.update_channel_branch("Nightly").startswith("codex/")
     assert program_setup.update_channel_branch("Unknown") == "main"
+
+
+def test_program_setup_relaunch_preserves_dry_run_flag() -> None:
+    """Verify update restart launches the GUI again with dry-run preserved."""
+    sys.path.insert(0, str(SETUP_DIRECTORY))
+
+    import program_setup
+
+    with patch.object(program_setup.subprocess, "Popen") as popen_mock:
+        program_setup.relaunch_application(dry_run=True)
+
+    command_arguments = popen_mock.call_args.args[0]
+    assert command_arguments[-1] == "--dry-run"
+    assert command_arguments[-2].endswith("program_setup.py")
 
 
 def test_linux_installer_uses_snap_for_snap_packages() -> None:
