@@ -19,6 +19,7 @@ SCRIPT_DIRECTORY = Path(__file__).resolve().parent
 REPOSITORY_ROOT = SCRIPT_DIRECTORY.parent
 SOFTWARE_CONFIG_PATH = SCRIPT_DIRECTORY / "software.json"
 BLUEPRINT_CONFIG_PATH = SCRIPT_DIRECTORY / "blueprint.config"
+VERSION_PATH = REPOSITORY_ROOT / "VERSION"
 
 
 @dataclass(frozen=True)
@@ -66,6 +67,34 @@ def run_git_command(arguments: list[str]) -> subprocess.CompletedProcess[str]:
     )
 
 
+def load_application_version(file_path: Path = VERSION_PATH) -> str:
+    if not file_path.exists():
+        return "0.0.0-dev"
+
+    version = file_path.read_text(encoding="utf-8").strip()
+    return version or "0.0.0-dev"
+
+
+def get_git_revision() -> str:
+    if not shutil.which("git") or not (REPOSITORY_ROOT / ".git").exists():
+        return "unknown"
+
+    revision_result = run_git_command(["rev-parse", "--short", "HEAD"])
+    if revision_result.returncode != 0:
+        return "unknown"
+
+    return revision_result.stdout.strip() or "unknown"
+
+
+def get_display_version() -> str:
+    version = load_application_version()
+    revision = get_git_revision()
+    if revision == "unknown":
+        return f"v{version}"
+
+    return f"v{version} ({revision})"
+
+
 def check_repository_update_status() -> tuple[str, str]:
     if not shutil.which("git"):
         return ("Unavailable", "Git was not found.")
@@ -73,6 +102,7 @@ def check_repository_update_status() -> tuple[str, str]:
     if not (REPOSITORY_ROOT / ".git").exists():
         return ("Unavailable", "This folder is not a Git checkout.")
 
+    local_version = load_application_version()
     branch_result = run_git_command(["branch", "--show-current"])
     branch_name = branch_result.stdout.strip() or "current branch"
 
@@ -94,12 +124,18 @@ def check_repository_update_status() -> tuple[str, str]:
     behind_count = int(behind_text)
 
     if behind_count:
-        return ("Update available", f"{behind_count} commit(s) available from {upstream_name}.")
+        return (
+            "Update available",
+            f"{behind_count} commit(s) available from {upstream_name}. Current version: v{local_version}.",
+        )
 
     if ahead_count:
-        return ("Up to date", f"{branch_name} is up to date and {ahead_count} local commit(s) ahead.")
+        return (
+            "Up to date",
+            f"v{local_version} on {branch_name} is up to date and {ahead_count} local commit(s) ahead.",
+        )
 
-    return ("Up to date", f"{branch_name} is up to date with {upstream_name}.")
+    return ("Up to date", f"v{local_version} on {branch_name} is up to date with {upstream_name}.")
 
 
 def update_repository() -> tuple[str, str]:
@@ -129,12 +165,13 @@ class SetupManager:
         self.result_queue: queue.Queue[tuple[str, str, str, str]] = queue.Queue()
         self.custom_vars: dict[str, tk.BooleanVar] = {}
         self.installed_status: dict[str, bool] = {}
+        self.display_version = get_display_version()
         self.selected_profile = tk.StringVar(value=next(iter(self.profiles), ""))
         self.is_installing = False
         self.is_checking_installed = False
         self.is_checking_updates = False
 
-        self.root.title("BasicSetup")
+        self.root.title(f"BasicSetup {self.display_version}")
         self.root.geometry("920x640")
         self.root.minsize(820, 560)
         self.root.columnconfigure(0, weight=1)
@@ -150,6 +187,7 @@ class SetupManager:
         style = ttk.Style()
         style.configure("Title.TLabel", font=("Segoe UI", 20, "bold"))
         style.configure("Subtitle.TLabel", foreground="#4b5563")
+        style.configure("Version.TLabel", foreground="#4b5563", font=("Segoe UI", 10))
         style.configure("Profile.TButton", padding=(12, 10))
         style.configure("Accent.TButton", padding=(14, 10))
         style.configure("Status.TLabel", foreground="#374151")
@@ -164,7 +202,15 @@ class SetupManager:
         header.grid(row=0, column=0, columnspan=2, sticky="ew", pady=(0, 18))
         header.columnconfigure(0, weight=1)
 
-        ttk.Label(header, text="BasicSetup", style="Title.TLabel").grid(row=0, column=0, sticky="w")
+        title_row = ttk.Frame(header)
+        title_row.grid(row=0, column=0, sticky="w")
+
+        ttk.Label(title_row, text="BasicSetup", style="Title.TLabel").grid(row=0, column=0, sticky="w")
+        ttk.Label(
+            title_row,
+            text=self.display_version,
+            style="Version.TLabel",
+        ).grid(row=0, column=1, sticky="sw", padx=(10, 0), pady=(0, 3))
         ttk.Label(
             header,
             text="Pick a machine profile or build a custom install list for a fresh Windows setup.",
@@ -184,7 +230,7 @@ class SetupManager:
         self.update_status_label = ttk.Label(update_panel, text="Update: not checked", style="Status.TLabel")
         self.update_status_label.grid(row=0, column=0, sticky="e", padx=(0, 8))
 
-        self.update_check_button = ttk.Button(update_panel, text="Check Updates", command=self.check_for_updates)
+        self.update_check_button = ttk.Button(update_panel, text="Check for Updates", command=self.check_for_updates)
         self.update_check_button.grid(row=0, column=1, padx=(0, 8))
 
         self.update_button = ttk.Button(

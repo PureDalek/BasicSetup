@@ -4,6 +4,7 @@ BasicSetup is a small Windows and Linux bootstrapper for setting up a fresh mach
 
 It provides:
 
+- A tracked application version in `VERSION`, shown in the GUI with the current Git commit.
 - A Tkinter setup UI for choosing predefined install profiles or a custom package list.
 - A JSON software catalog for Windows and Linux package names.
 - A local download bootstrapper for fresh Windows installs.
@@ -15,6 +16,8 @@ It provides:
 
 ```text
 BasicSetup/
+|-- VERSION                         # Current application version shown in the GUI
+|-- ROADMAP.md                      # Improvement ideas and future workflow notes
 |-- setup/
 |   |-- BasicSetupLauncher.ps1       # Windows launcher with optional Git auto-update
 |   |-- Install-BasicSetupLocal.ps1  # Download-first Windows installer with winget dependency setup
@@ -132,6 +135,8 @@ The GUI also checks for:
 
 Installed packages are marked in the status table and skipped during install runs.
 
+The window title and header show the tracked app version from `VERSION` plus the current Git commit when available.
+
 ## Git auto-update launcher
 
 Use this when BasicSetup already exists locally as a Git checkout.
@@ -244,6 +249,8 @@ The tests validate:
 ## Creating a release
 
 This repository includes a tag-based release workflow.
+
+Before tagging a release, update `VERSION` to the release number.
 
 After merging changes into `main`, create and push a version tag:
 
