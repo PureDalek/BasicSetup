@@ -29,6 +29,11 @@
         "linux_package": "google-chrome",
         "linux_repo": null
     },
+    "Discord": {
+        "windows_package": "discord",
+        "linux_package": "discord",
+        "linux_repo": null
+    },
     "OpenLens": {
         "windows_package": "openlens",
         "linux_package": "openlens",

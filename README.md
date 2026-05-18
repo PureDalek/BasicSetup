@@ -4,7 +4,7 @@ BasicSetup is a small Windows and Linux bootstrapper for setting up a fresh mach
 
 It provides:
 
-- A Tkinter setup UI for choosing predefined install profiles.
+- A Tkinter setup UI for choosing predefined install profiles or a custom package list.
 - A JSON software catalog for Windows and Linux package names.
 - A local download bootstrapper for fresh Windows installs.
 - A Windows launcher with optional auto-update support.
@@ -15,18 +15,18 @@ It provides:
 
 ```text
 BasicSetup/
-├── setup/
-│   ├── BasicSetupLauncher.ps1       # Windows launcher with optional Git auto-update
-│   ├── Install-BasicSetupLocal.ps1  # Download-first Windows installer with winget dependency setup
-│   ├── Elevate.ps1                  # Elevated Chocolatey wrapper
-│   ├── blueprint.config             # Setup profiles
-│   ├── program_setup.py             # Tkinter UI
-│   ├── run_full_setup.bat           # Windows bootstrap entrypoint
-│   ├── software.json                # Software package catalog
-│   └── software_installer.py        # Package install logic
-├── tests/
-│   └── test_basicsetup_config.py    # Config and installer tests
-└── requirements.txt
+|-- setup/
+|   |-- BasicSetupLauncher.ps1       # Windows launcher with optional Git auto-update
+|   |-- Install-BasicSetupLocal.ps1  # Download-first Windows installer with winget dependency setup
+|   |-- Elevate.ps1                  # Elevated Chocolatey wrapper
+|   |-- blueprint.config             # Setup profiles
+|   |-- program_setup.py             # Tkinter UI
+|   |-- run_full_setup.bat           # Windows bootstrap entrypoint
+|   |-- software.json                # Software package catalog
+|   `-- software_installer.py        # Package install logic
+|-- tests/
+|   `-- test_basicsetup_config.py    # Config and installer tests
+`-- requirements.txt
 ```
 
 ## Requirements
@@ -103,6 +103,28 @@ Download only, without launching setup:
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File $installerPath -NoLaunch
 ```
 
+## GUI usage
+
+Launch the GUI through the Windows batch file:
+
+```powershell
+.\setup\run_full_setup.bat
+```
+
+Or run it directly when Python is already installed:
+
+```powershell
+python .\setup\program_setup.py
+```
+
+Use dry-run mode to verify a profile without installing packages:
+
+```powershell
+python .\setup\program_setup.py --dry-run
+```
+
+The UI keeps profile installs and custom installs in the same status table. Package installs run in the background so the window remains responsive, and each package gets a final status.
+
 ## Git auto-update launcher
 
 Use this when BasicSetup already exists locally as a Git checkout.
@@ -146,9 +168,10 @@ Profiles are configured in `setup/blueprint.config`.
 
 Current profiles:
 
-- `Game`
+- `Games`
 - `Work`
-- `Biznoe`
+- `Custom Play`
+- `Developer Workstation`
 - `Bridgify`
 
 Each profile is a list of software names that must exist in `setup/software.json`.
@@ -205,6 +228,8 @@ The tests validate:
 
 - JSON config syntax
 - Profile/package consistency
+- Core first-run profiles
+- GUI config loading from the script directory
 - Package key whitespace issues
 - Windows installer command routing
 - Linux snap routing
@@ -226,6 +251,6 @@ GitHub Actions will create a release and upload a ZIP package containing the set
 
 ## Notes
 
-- `program_setup.py` should normally be launched from inside the `setup` directory or through the provided wrapper/batch launcher.
+- `program_setup.py` can be launched from any working directory because it loads config files relative to its own script path.
 - Package installation changes the local machine. Review `software.json` before running a full profile.
 - Linux support is best-effort and depends on package availability in the configured package manager.

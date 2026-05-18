@@ -54,6 +54,14 @@ def test_all_blueprint_packages_exist_in_software_catalog() -> None:
     assert missing_packages_by_profile == {}
 
 
+def test_core_setup_profiles_are_available() -> None:
+    """Verify the GUI exposes the expected first-run profile choices."""
+    setup_blueprints = load_json_config(BLUEPRINT_CONFIG_PATH)
+
+    for profile_name in ("Games", "Work", "Custom Play"):
+        assert profile_name in setup_blueprints
+
+
 def test_software_catalog_keys_do_not_have_extra_whitespace() -> None:
     """Prevent subtle config mismatches caused by leading or trailing spaces."""
     software_catalog = load_json_config(SOFTWARE_CONFIG_PATH)
@@ -84,6 +92,19 @@ def test_all_software_entries_have_required_package_fields() -> None:
             malformed_packages[package_name] = missing_fields
 
     assert malformed_packages == {}
+
+
+def test_program_setup_loaders_use_script_directory_paths() -> None:
+    """Verify GUI config loading is independent of the caller's working directory."""
+    sys.path.insert(0, str(SETUP_DIRECTORY))
+
+    import program_setup
+
+    software_catalog = program_setup.load_software_catalog()
+    setup_profiles = program_setup.load_profiles()
+
+    assert "Visual Studio Code" in software_catalog
+    assert "Games" in setup_profiles
 
 
 def test_linux_installer_uses_snap_for_snap_packages() -> None:

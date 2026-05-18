@@ -2,6 +2,21 @@
 
 All notable changes to BasicSetup will be documented in this file.
 
+## Unreleased
+
+### Added
+
+- Rebuilt the Tkinter GUI with profile selection, custom package selection, background installs, per-package status, and dry-run mode.
+- Added `Games`, `Custom Play`, and `Developer Workstation` setup profiles.
+- Added Discord to the software catalog.
+- Added tests for core profile availability and GUI config loading.
+
+### Changed
+
+- Hardened the Windows batch bootstrapper's Python detection and install flow.
+- Updated the elevated Chocolatey wrapper to wait for installs and return the installer exit code.
+- Refreshed README setup and GUI documentation.
+
 ## [0.1.0] - 2026-05-17
 
 ### Added

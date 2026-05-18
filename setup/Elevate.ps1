@@ -2,4 +2,5 @@
 param (
     [String]$PackageName
 )
-Start-Process "choco" -ArgumentList "install $PackageName -y" -Verb RunAs
+$process = Start-Process "choco" -ArgumentList "install $PackageName -y" -Verb RunAs -Wait -PassThru
+exit $process.ExitCode
