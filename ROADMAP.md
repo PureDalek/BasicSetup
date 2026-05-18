@@ -4,16 +4,18 @@ These are practical next steps that fit the current project shape.
 
 ## Catalog editing
 
-- Add an "Add from catalog" workflow after the install/check flow is stable.
+- Expand the "Add from catalog" workflow after the install/check flow is stable.
 - Start with a local form that validates required fields before writing to `setup/software.json`.
 - Validate package IDs by running package-manager search commands before saving.
 - Keep a dry-run preview that shows the exact JSON diff before changing files.
+- Consider a user catalog file for private entries that should not be committed upstream.
 
 ## Git-backed saves
 
 - Save catalog/profile changes through a branch-and-PR workflow instead of writing directly to `main`.
 - After editing `software.json` or `blueprint.config`, run config tests, commit the JSON change, push the branch, and open a PR.
 - Store a short change note with each catalog entry so future users know why it was added.
+- Keep GUI-saved profiles in `setup/blueprint.config` so they can be reviewed as normal Git changes.
 
 ## Versioning
 

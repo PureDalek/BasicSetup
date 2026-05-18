@@ -9,6 +9,7 @@ from unittest.mock import patch
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 SETUP_DIRECTORY = REPOSITORY_ROOT / "setup"
 SOFTWARE_CONFIG_PATH = SETUP_DIRECTORY / "software.json"
+OPTIONAL_CATALOG_PATH = SETUP_DIRECTORY / "catalog_extra.json"
 BLUEPRINT_CONFIG_PATH = SETUP_DIRECTORY / "blueprint.config"
 VERSION_PATH = REPOSITORY_ROOT / "VERSION"
 
@@ -25,6 +26,14 @@ def test_software_json_is_valid() -> None:
 
     assert isinstance(software_catalog, dict)
     assert software_catalog
+
+
+def test_optional_catalog_json_is_valid() -> None:
+    """Verify the optional software catalog is valid JSON."""
+    optional_catalog = load_json_config(OPTIONAL_CATALOG_PATH)
+
+    assert isinstance(optional_catalog, dict)
+    assert "RustDesk" in optional_catalog
 
 
 def test_blueprint_config_is_valid() -> None:
@@ -45,8 +54,10 @@ def test_version_file_is_available() -> None:
 
 
 def test_all_blueprint_packages_exist_in_software_catalog() -> None:
-    """Verify every package referenced by a setup profile exists in software.json."""
+    """Verify every package referenced by a setup profile exists in a catalog."""
     software_catalog = load_json_config(SOFTWARE_CONFIG_PATH)
+    optional_catalog = load_json_config(OPTIONAL_CATALOG_PATH)
+    combined_catalog = {**software_catalog, **optional_catalog}
     setup_blueprints = load_json_config(BLUEPRINT_CONFIG_PATH)
 
     missing_packages_by_profile: dict[str, list[str]] = {}
@@ -55,7 +66,7 @@ def test_all_blueprint_packages_exist_in_software_catalog() -> None:
         missing_packages = [
             package_name
             for package_name in package_names
-            if package_name not in software_catalog
+            if package_name not in combined_catalog
         ]
 
         if missing_packages:
@@ -68,7 +79,7 @@ def test_core_setup_profiles_are_available() -> None:
     """Verify the GUI exposes the expected first-run profile choices."""
     setup_blueprints = load_json_config(BLUEPRINT_CONFIG_PATH)
 
-    for profile_name in ("Games", "Work", "Custom Play"):
+    for profile_name in ("Developer", "Games", "AI"):
         assert profile_name in setup_blueprints
 
 
@@ -92,6 +103,25 @@ def test_all_software_entries_have_required_package_fields() -> None:
     malformed_packages: dict[str, list[str]] = {}
 
     for package_name, package_config in software_catalog.items():
+        missing_fields = [
+            required_field
+            for required_field in ("windows_package", "linux_package")
+            if required_field not in package_config
+        ]
+
+        if missing_fields:
+            malformed_packages[package_name] = missing_fields
+
+    assert malformed_packages == {}
+
+
+def test_all_optional_catalog_entries_have_required_package_fields() -> None:
+    """Verify optional catalog packages have both Windows and Linux package keys."""
+    optional_catalog = load_json_config(OPTIONAL_CATALOG_PATH)
+
+    malformed_packages: dict[str, list[str]] = {}
+
+    for package_name, package_config in optional_catalog.items():
         missing_fields = [
             required_field
             for required_field in ("windows_package", "linux_package")

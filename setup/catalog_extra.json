@@ -1,0 +1,132 @@
+{
+    "awscli": {
+        "windows_package": "awscli",
+        "linux_package": "awscli",
+        "linux_repo": null,
+        "is_snap": false
+    },
+    "Beyond Compare": {
+        "windows_package": "beyondcompare",
+        "linux_package": "bcompare",
+        "linux_repo": null
+    },
+    "Chocolatey GUI": {
+        "windows_package": "chocolateygui",
+        "linux_package": null,
+        "linux_repo": null
+    },
+    "Claude": {
+        "windows_package": "claude",
+        "linux_package": null,
+        "linux_repo": null
+    },
+    "Claude Code": {
+        "windows_package": "claude-code",
+        "linux_package": null,
+        "linux_repo": null
+    },
+    "Clickup": {
+        "windows_package": "clickup",
+        "linux_package": "clickup"
+    },
+    "Data Grip": {
+        "windows_package": "datagrip",
+        "linux_package": "datagrip",
+        "linux_repo": null,
+        "is_snap": false
+    },
+    "Ditto": {
+        "windows_package": "ditto",
+        "linux_package": "copyq",
+        "linux_repo": null
+    },
+    "Gimp": {
+        "windows_package": "gimp --version=2.10.4",
+        "linux_package": "gimp"
+    },
+    "GPT4All": {
+        "windows_package": "gpt4all",
+        "linux_package": null,
+        "linux_repo": null
+    },
+    "Helm": {
+        "windows_package": "kubernetes-helm",
+        "linux_package": "helm",
+        "linux_repo": null,
+        "is_snap": false
+    },
+    "LM Studio": {
+        "windows_package": "lmstudio",
+        "linux_package": null,
+        "linux_repo": null
+    },
+    "MobaXtrem": {
+        "windows_package": "mobaxterm",
+        "linux_package": null,
+        "linux_repo": null,
+        "is_snap": false
+    },
+    "Notepad++": {
+        "windows_package": "notepadplusplus",
+        "linux_package": "notepadqq",
+        "linux_repo": "ppa:notepadqq-team/notepadqq"
+    },
+    "OpenLens": {
+        "windows_package": "openlens",
+        "linux_package": "openlens",
+        "linux_repo": null
+    },
+    "OpenSSH": {
+        "windows_package": "openssh",
+        "linux_package": "openssh-server",
+        "linux_repo": null,
+        "is_snap": false
+    },
+    "OpenCode": {
+        "windows_package": "opencode",
+        "linux_package": null,
+        "linux_repo": null
+    },
+    "Proton VPn": {
+        "windows_package": "protonvpn",
+        "linux_package": "protonvpn",
+        "linux_repo": null,
+        "is_snap": false
+    },
+    "Putty": {
+        "windows_package": "putty",
+        "linux_package": "putty",
+        "linux_repo": null,
+        "is_snap": false
+    },
+    "Remote Desktop Manager": {
+        "windows_package": "rdm",
+        "linux_package": null,
+        "linux_repo": null,
+        "is_snap": false,
+        "from_site": "https://devolutions.net/remote-desktop-manager/home/downloadfree/"
+    },
+    "RustDesk": {
+        "windows_package": "rustdesk",
+        "linux_package": null,
+        "linux_repo": null
+    },
+    "Slack": {
+        "windows_package": "slack",
+        "linux_package": "slack",
+        "linux_repo": null,
+        "is_snap": true
+    },
+    "Tilt": {
+        "windows_package": "tilt",
+        "linux_package": "tilt",
+        "linux_repo": null,
+        "is_snap": true
+    },
+    "YouTube Music": {
+        "windows_package": "th-ch-youtube-music",
+        "linux_package": null,
+        "linux_repo": null,
+        "is_snap": false
+    }
+}

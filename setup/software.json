@@ -1,7 +1,17 @@
 {
-    "Visual Studio Code": {
-        "windows_package": "vscode",
-        "linux_package": "code",
+    "7Zip": {
+        "windows_package": "7zip",
+        "linux_package": "p7zip-full",
+        "linux_repo": null
+    },
+    "ChatGPT": {
+        "windows_package": "chatgpt",
+        "linux_package": null,
+        "linux_repo": null
+    },
+    "Codex": {
+        "windows_package": "codex",
+        "linux_package": null,
         "linux_repo": null
     },
     "DBeaver": {
@@ -9,145 +19,10 @@
         "linux_package": "dbeaver-ce",
         "linux_repo": null
     },
-    "Postman": {
-        "windows_package": "postman",
-        "linux_package": "postman",
-        "linux_repo": null
-    },
-    "Notepad++": {
-        "windows_package": "notepadplusplus",
-        "linux_package": "notepadqq",
-        "linux_repo": "ppa:notepadqq-team/notepadqq"
-    },
-    "Beyond Compare": {
-        "windows_package": "beyondcompare",
-        "linux_package": "bcompare",
-        "linux_repo": null
-    },
-    "Google Chrome": {
-        "windows_package": "googlechrome",
-        "linux_package": "google-chrome",
-        "linux_repo": null
-    },
     "Discord": {
         "windows_package": "discord",
         "linux_package": "discord",
         "linux_repo": null
-    },
-    "OpenLens": {
-        "windows_package": "openlens",
-        "linux_package": "openlens",
-        "linux_repo": null
-    },
-    "Chocolatey GUI": {
-        "windows_package": "chocolateygui",
-        "linux_package": null,
-        "linux_repo": null
-    },
-    "Steam": {
-        "windows_package": "steam",
-        "linux_package": "steam",
-        "linux_repo": null
-    },
-    "GOG": {
-        "windows_package": "goggalaxy",
-        "linux_package": null,
-        "linux_repo": null
-    },
-    "VCMI": {
-        "windows_package": "vcmi",
-        "linux_package": "vcmi",
-        "linux_repo": null
-    },
-    "Ditto": {
-        "windows_package": "ditto",
-        "linux_package": "copyq",
-        "linux_repo": null
-    },
-    "7Zip": {
-        "windows_package": "7zip",
-        "linux_package": "p7zip-full",
-        "linux_repo": null
-    },
-    "git": {
-        "windows_package": "git",
-        "linux_package": "git",
-        "linux_repo": null
-    },
-    "Slack": {
-        "windows_package": "slack",
-        "linux_package": "slack",
-        "linux_repo": null,
-        "is_snap": true
-    },
-    "awscli": {
-        "windows_package": "awscli",
-        "linux_package": "awscli",
-        "linux_repo": null,
-        "is_snap": false
-    },
-    "Data Grip": {
-        "windows_package": "datagrip",
-        "linux_package": "datagrip",
-        "linux_repo": null,
-        "is_snap": false
-    },
-    "MobaXtrem": {
-        "windows_package": "mobaxterm",
-        "linux_package": null,
-        "linux_repo": null,
-        "is_snap": false
-    },
-    "OpenSSH": {
-        "windows_package": "openssh",
-        "linux_package": "openssh-server",
-        "linux_repo": null,
-        "is_snap": false
-    },
-    "Putty": {
-        "windows_package": "putty",
-        "linux_package": "putty",
-        "linux_repo": null,
-        "is_snap": false
-    },
-    "YouTube Music": {
-        "windows_package": "th-ch-youtube-music",
-        "linux_package": null,
-        "linux_repo": null,
-        "is_snap": false
-    },
-    "Remote Desktop Manager": {
-        "windows_package": "rdm",
-        "linux_package": null,
-        "linux_repo": null,
-        "is_snap": false,
-        "from_site": "https://devolutions.net/remote-desktop-manager/home/downloadfree/"
-    },
-    "Node JS": {
-        "windows_package": "nodejs",
-        "linux_package": "nodejs",
-        "linux_repo": null,
-        "is_snap": false
-    },
-    "Proton VPn": {
-        "windows_package": "protonvpn",
-        "linux_package": "protonvpn",
-        "linux_repo": null,
-        "is_snap": false
-    },
-    "Playnite": {
-        "windows_package": "playnite",
-        "linux_package": null,
-        "linux_repo": null,
-        "is_snap": false
-    },
-    "Clickup": {
-        "windows_package": "clickup",
-        "linux_package": "clickup"
-    },
-    "Gimp": {
-        "windows_package": "gimp --version=2.10.4",
-        "linux_package": "gimp"
     },
     "Docker": {
         "windows_package": "docker-desktop",
@@ -155,16 +30,56 @@
         "linux_repo": null,
         "is_snap": false
     },
-    "Helm": {
-        "windows_package": "kubernetes-helm",
-        "linux_package": "helm",
+    "GOG": {
+        "windows_package": "goggalaxy",
+        "linux_package": null,
+        "linux_repo": null
+    },
+    "Google Chrome": {
+        "windows_package": "googlechrome",
+        "linux_package": "google-chrome",
+        "linux_repo": null
+    },
+    "Node JS": {
+        "windows_package": "nodejs",
+        "linux_package": "nodejs",
         "linux_repo": null,
         "is_snap": false
     },
-    "Tilt": {
-        "windows_package": "tilt",
-        "linux_package": "tilt",
+    "Ollama": {
+        "windows_package": "Ollama",
+        "linux_package": null,
+        "linux_repo": null
+    },
+    "Playnite": {
+        "windows_package": "playnite",
+        "linux_package": null,
         "linux_repo": null,
-        "is_snap": true
+        "is_snap": false
+    },
+    "Postman": {
+        "windows_package": "postman",
+        "linux_package": "postman",
+        "linux_repo": null
+    },
+    "Steam": {
+        "windows_package": "steam",
+        "linux_package": "steam",
+        "linux_repo": null
+    },
+    "VCMI": {
+        "windows_package": "vcmi",
+        "linux_package": "vcmi",
+        "linux_repo": null
+    },
+    "Visual Studio Code": {
+        "windows_package": "vscode",
+        "linux_package": "code",
+        "linux_repo": null
+    },
+    "git": {
+        "windows_package": "git",
+        "linux_package": "git",
+        "linux_repo": null
     }
 }

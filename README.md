@@ -6,7 +6,8 @@ It provides:
 
 - A tracked application version in `VERSION`, shown in the GUI with the current Git commit.
 - A Tkinter setup UI for choosing predefined install profiles or a custom package list.
-- A JSON software catalog for Windows and Linux package names.
+- A basic JSON software catalog plus an optional catalog that can be loaded on request.
+- JSON-backed setup profiles that can be saved from the GUI.
 - A local download bootstrapper for fresh Windows installs.
 - A Windows launcher with optional auto-update support.
 - Chocolatey-based Windows installs.
@@ -23,6 +24,7 @@ BasicSetup/
 |   |-- Install-BasicSetupLocal.ps1  # Download-first Windows installer with winget dependency setup
 |   |-- Elevate.ps1                  # Elevated Chocolatey wrapper
 |   |-- blueprint.config             # Setup profiles
+|   |-- catalog_extra.json           # Optional software catalog loaded on request
 |   |-- program_setup.py             # Tkinter UI
 |   |-- run_full_setup.bat           # Windows bootstrap entrypoint
 |   |-- software.json                # Software package catalog
@@ -128,6 +130,16 @@ python .\setup\program_setup.py --dry-run
 
 The UI keeps profile installs and custom installs in the same status table. Package installs run in the background so the window remains responsive, and each package gets a final status.
 
+The default install surface is intentionally small. Basic profiles include:
+
+- `Developer`
+- `Games`
+- `AI`
+
+Use the `Catalog` tab and `Load More Catalog` button to pull in optional apps such as RustDesk, Claude, LM Studio, Slack, remote tools, and additional developer utilities. Selected catalog apps can be added to the custom install list.
+
+Custom selections can be saved as profiles. Profiles are stored in `setup/blueprint.config`, so changes are visible in Git and can be reviewed in a PR.
+
 The GUI also checks for:
 
 - BasicSetup updates from the configured Git upstream.
@@ -185,11 +197,9 @@ Profiles are configured in `setup/blueprint.config`.
 
 Current profiles:
 
+- `Developer`
 - `Games`
-- `Work`
-- `Custom Play`
-- `Developer Workstation`
-- `Bridgify`
+- `AI`
 
 Each profile is a list of software names that must exist in `setup/software.json`.
 
@@ -208,7 +218,7 @@ Example:
 
 ## Software catalog
 
-Software metadata lives in `setup/software.json`.
+Basic software metadata lives in `setup/software.json`. Optional software metadata lives in `setup/catalog_extra.json` and is loaded only when requested from the GUI.
 
 Example entry:
 

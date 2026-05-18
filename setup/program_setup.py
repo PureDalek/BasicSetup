@@ -7,9 +7,11 @@ import shutil
 import subprocess
 import threading
 import tkinter as tk
+import urllib.error
+import urllib.request
 from dataclasses import dataclass
 from pathlib import Path
-from tkinter import messagebox, ttk
+from tkinter import messagebox, simpledialog, ttk
 from typing import Any
 
 from software_installer import SoftwareInstaller
@@ -18,6 +20,7 @@ from software_installer import SoftwareInstaller
 SCRIPT_DIRECTORY = Path(__file__).resolve().parent
 REPOSITORY_ROOT = SCRIPT_DIRECTORY.parent
 SOFTWARE_CONFIG_PATH = SCRIPT_DIRECTORY / "software.json"
+OPTIONAL_CATALOG_PATH = SCRIPT_DIRECTORY / "catalog_extra.json"
 BLUEPRINT_CONFIG_PATH = SCRIPT_DIRECTORY / "blueprint.config"
 VERSION_PATH = REPOSITORY_ROOT / "VERSION"
 UPDATE_CHANNELS = {
@@ -41,6 +44,12 @@ def load_json_config(file_path: Path) -> dict[str, Any]:
         return json.load(config_file)
 
 
+def save_json_config(file_path: Path, payload: dict[str, Any]) -> None:
+    with file_path.open("w", encoding="utf-8") as config_file:
+        json.dump(payload, config_file, indent=4)
+        config_file.write("\n")
+
+
 def load_software_catalog(file_path: Path = SOFTWARE_CONFIG_PATH) -> dict[str, SoftwareItem]:
     catalog = load_json_config(file_path)
     return {
@@ -56,9 +65,42 @@ def load_software_catalog(file_path: Path = SOFTWARE_CONFIG_PATH) -> dict[str, S
     }
 
 
+def parse_software_catalog(catalog: dict[str, Any]) -> dict[str, SoftwareItem]:
+    return {
+        name: SoftwareItem(
+            name=name,
+            windows_package=config.get("windows_package"),
+            linux_package=config.get("linux_package"),
+            linux_repo=config.get("linux_repo"),
+            is_snap=bool(config.get("is_snap", False)),
+            from_site=config.get("from_site"),
+        )
+        for name, config in sorted(catalog.items(), key=lambda item: item[0].lower())
+    }
+
+
+def optional_catalog_url(channel_name: str = "Stable") -> str:
+    branch_name = update_channel_branch(channel_name)
+    return f"https://raw.githubusercontent.com/PureDalek/BasicSetup/{branch_name}/setup/catalog_extra.json"
+
+
+def load_optional_catalog(channel_name: str = "Stable") -> dict[str, SoftwareItem]:
+    try:
+        with urllib.request.urlopen(optional_catalog_url(channel_name), timeout=10) as response:
+            catalog = json.loads(response.read().decode("utf-8"))
+    except (OSError, urllib.error.URLError, json.JSONDecodeError):
+        catalog = load_json_config(OPTIONAL_CATALOG_PATH)
+
+    return parse_software_catalog(catalog)
+
+
 def load_profiles(file_path: Path = BLUEPRINT_CONFIG_PATH) -> dict[str, list[str]]:
     profiles = load_json_config(file_path)
     return {name: list(packages) for name, packages in profiles.items()}
+
+
+def save_profiles(profiles: dict[str, list[str]], file_path: Path = BLUEPRINT_CONFIG_PATH) -> None:
+    save_json_config(file_path, profiles)
 
 
 def run_git_command(arguments: list[str]) -> subprocess.CompletedProcess[str]:
@@ -185,6 +227,8 @@ class SetupManager:
         self.result_queue: queue.Queue[tuple[str, str, str, str]] = queue.Queue()
         self.custom_vars: dict[str, tk.BooleanVar] = {}
         self.installed_status: dict[str, bool] = {}
+        self.optional_catalog_loaded = False
+        self.optional_catalog_names: set[str] = set()
         self.display_version = get_display_version()
         default_channel = "Nightly" if self._current_branch().startswith("codex/") else "Stable"
         self.update_channel = tk.StringVar(value=default_channel)
@@ -281,36 +325,10 @@ class SetupManager:
         )
         self.update_button.grid(row=0, column=3)
 
-        profile_panel = ttk.Frame(shell)
-        profile_panel.grid(row=1, column=0, sticky="nsw", padx=(0, 18))
-        profile_panel.columnconfigure(0, weight=1)
-
-        ttk.Label(profile_panel, text="Profiles", font=("Segoe UI", 12, "bold")).grid(row=0, column=0, sticky="w")
-        for index, profile_name in enumerate(self.profiles, start=1):
-            button = ttk.Radiobutton(
-                profile_panel,
-                text=profile_name,
-                value=profile_name,
-                variable=self.selected_profile,
-                command=lambda name=profile_name: self._select_profile(name),
-                style="Profile.TButton",
-            )
-            button.grid(row=index, column=0, sticky="ew", pady=(8, 0))
-
-        ttk.Separator(profile_panel).grid(row=len(self.profiles) + 1, column=0, sticky="ew", pady=16)
-        ttk.Button(
-            profile_panel,
-            text="Use Custom Selection",
-            command=self._select_custom_tab,
-            style="Profile.TButton",
-        ).grid(row=len(self.profiles) + 2, column=0, sticky="ew")
-        self.installed_check_button = ttk.Button(
-            profile_panel,
-            text="Check Installed",
-            command=self.check_installed_packages,
-            style="Profile.TButton",
-        )
-        self.installed_check_button.grid(row=len(self.profiles) + 3, column=0, sticky="ew", pady=(8, 0))
+        self.profile_panel = ttk.Frame(shell)
+        self.profile_panel.grid(row=1, column=0, sticky="nsw", padx=(0, 18))
+        self.profile_panel.columnconfigure(0, weight=1)
+        self._build_profile_panel()
 
         content = ttk.Frame(shell)
         content.grid(row=1, column=1, sticky="nsew")
@@ -322,11 +340,14 @@ class SetupManager:
 
         self.profile_tab = ttk.Frame(self.tabs, padding=12)
         self.custom_tab = ttk.Frame(self.tabs, padding=12)
+        self.catalog_tab = ttk.Frame(self.tabs, padding=12)
         self.tabs.add(self.profile_tab, text="Profile")
         self.tabs.add(self.custom_tab, text="Custom")
+        self.tabs.add(self.catalog_tab, text="Catalog")
 
         self._build_package_table(self.profile_tab)
         self._build_custom_tab()
+        self._build_catalog_tab()
 
         action_bar = ttk.Frame(content)
         action_bar.grid(row=1, column=0, sticky="ew", pady=(14, 0))
@@ -342,6 +363,55 @@ class SetupManager:
             style="Accent.TButton",
         )
         self.install_button.grid(row=0, column=1, sticky="e")
+
+    def _build_profile_panel(self) -> None:
+        for child in self.profile_panel.winfo_children():
+            child.destroy()
+
+        ttk.Label(self.profile_panel, text="Profiles", font=("Segoe UI", 12, "bold")).grid(
+            row=0,
+            column=0,
+            sticky="w",
+        )
+
+        for index, profile_name in enumerate(self.profiles, start=1):
+            button = ttk.Radiobutton(
+                self.profile_panel,
+                text=profile_name,
+                value=profile_name,
+                variable=self.selected_profile,
+                command=lambda name=profile_name: self._select_profile(name),
+                style="Profile.TButton",
+            )
+            button.grid(row=index, column=0, sticky="ew", pady=(8, 0))
+
+        action_start_row = len(self.profiles) + 1
+        ttk.Separator(self.profile_panel).grid(row=action_start_row, column=0, sticky="ew", pady=16)
+        ttk.Button(
+            self.profile_panel,
+            text="Use Custom Selection",
+            command=self._select_custom_tab,
+            style="Profile.TButton",
+        ).grid(row=action_start_row + 1, column=0, sticky="ew")
+        ttk.Button(
+            self.profile_panel,
+            text="Save Custom as Profile",
+            command=self.save_custom_profile,
+            style="Profile.TButton",
+        ).grid(row=action_start_row + 2, column=0, sticky="ew", pady=(8, 0))
+        ttk.Button(
+            self.profile_panel,
+            text="Delete Profile",
+            command=self.delete_selected_profile,
+            style="Profile.TButton",
+        ).grid(row=action_start_row + 3, column=0, sticky="ew", pady=(8, 0))
+        self.installed_check_button = ttk.Button(
+            self.profile_panel,
+            text="Check Installed",
+            command=self.check_installed_packages,
+            style="Profile.TButton",
+        )
+        self.installed_check_button.grid(row=action_start_row + 4, column=0, sticky="ew", pady=(8, 0))
 
     def _build_package_table(self, parent: ttk.Frame) -> None:
         parent.columnconfigure(0, weight=1)
@@ -385,6 +455,7 @@ class SetupManager:
         canvas.configure(yscrollcommand=scrollbar.set)
 
         checklist = ttk.Frame(canvas)
+        self.custom_checklist = checklist
         canvas_window = canvas.create_window((0, 0), window=checklist, anchor="nw")
 
         def resize_canvas(event: tk.Event) -> None:
@@ -393,21 +464,77 @@ class SetupManager:
         canvas.bind("<Configure>", resize_canvas)
         checklist.bind("<Configure>", lambda _event: canvas.configure(scrollregion=canvas.bbox("all")))
 
+        self._refresh_custom_checklist()
+
+    def _refresh_custom_checklist(self) -> None:
+        for child in self.custom_checklist.winfo_children():
+            child.destroy()
+
         for row_index, software_name in enumerate(self.software_catalog):
-            variable = tk.BooleanVar(value=False)
-            self.custom_vars[software_name] = variable
+            variable = self.custom_vars.setdefault(software_name, tk.BooleanVar(value=False))
             item = self.software_catalog[software_name]
             label = f"{software_name}    Windows: {item.windows_package or 'manual'}    Linux: {item.linux_package or 'manual'}"
-            ttk.Checkbutton(checklist, text=label, variable=variable).grid(
+            ttk.Checkbutton(self.custom_checklist, text=label, variable=variable).grid(
                 row=row_index,
                 column=0,
                 sticky="w",
                 pady=3,
             )
 
+    def _build_catalog_tab(self) -> None:
+        self.catalog_tab.columnconfigure(0, weight=1)
+        self.catalog_tab.rowconfigure(1, weight=1)
+
+        toolbar = ttk.Frame(self.catalog_tab)
+        toolbar.grid(row=0, column=0, sticky="ew", pady=(0, 10))
+        toolbar.columnconfigure(0, weight=1)
+
+        ttk.Label(toolbar, text="Software catalog", font=("Segoe UI", 14, "bold")).grid(row=0, column=0, sticky="w")
+        self.catalog_load_button = ttk.Button(toolbar, text="Load More Catalog", command=self.load_more_catalog)
+        self.catalog_load_button.grid(row=0, column=1, padx=(8, 0))
+        ttk.Button(toolbar, text="Add Selected to Custom", command=self.add_catalog_selection_to_custom).grid(
+            row=0,
+            column=2,
+            padx=(8, 0),
+        )
+
+        columns = ("package", "windows", "linux", "status")
+        self.catalog_table = ttk.Treeview(self.catalog_tab, columns=columns, show="headings", selectmode="extended")
+        self.catalog_table.heading("package", text="Software")
+        self.catalog_table.heading("windows", text="Windows package")
+        self.catalog_table.heading("linux", text="Linux package")
+        self.catalog_table.heading("status", text="Catalog")
+        self.catalog_table.column("package", width=210, minwidth=170)
+        self.catalog_table.column("windows", width=170, minwidth=130)
+        self.catalog_table.column("linux", width=160, minwidth=120)
+        self.catalog_table.column("status", width=140, minwidth=110)
+        self.catalog_table.grid(row=1, column=0, sticky="nsew")
+
+        scrollbar = ttk.Scrollbar(self.catalog_tab, orient="vertical", command=self.catalog_table.yview)
+        scrollbar.grid(row=1, column=1, sticky="ns")
+        self.catalog_table.configure(yscrollcommand=scrollbar.set)
+        self._render_catalog_rows()
+
+    def _render_catalog_rows(self) -> None:
+        self.catalog_table.delete(*self.catalog_table.get_children())
+        for software_name, item in self.software_catalog.items():
+            catalog_status = "Optional" if software_name in self.optional_catalog_names else "Basic"
+            self.catalog_table.insert(
+                "",
+                "end",
+                iid=software_name,
+                values=(
+                    software_name,
+                    item.windows_package or "manual",
+                    item.linux_package or "manual",
+                    catalog_status,
+                ),
+            )
+
     def _select_profile(self, profile_name: str) -> None:
         self.tabs.select(self.profile_tab)
         package_names = self.profiles.get(profile_name, [])
+        self._ensure_packages_available(package_names)
         self.profile_title.configure(text=f"{profile_name} setup ({len(package_names)} apps)")
         self._render_package_rows(package_names)
 
@@ -423,10 +550,97 @@ class SetupManager:
         for variable in self.custom_vars.values():
             variable.set(False)
 
+    def load_more_catalog(self) -> None:
+        try:
+            optional_catalog = load_optional_catalog(self.update_channel.get())
+        except Exception as error:
+            messagebox.showerror("Catalog", f"Could not load optional catalog: {error}")
+            return
+
+        self.software_catalog.update(optional_catalog)
+        self.software_catalog = dict(sorted(self.software_catalog.items(), key=lambda item: item[0].lower()))
+        self.optional_catalog_loaded = True
+        self.optional_catalog_names.update(optional_catalog)
+        self._refresh_custom_checklist()
+        self._render_catalog_rows()
+        self.catalog_load_button.configure(state="disabled")
+        self.status_label.configure(text=f"Loaded {len(optional_catalog)} optional catalog apps.")
+
+    def add_catalog_selection_to_custom(self) -> None:
+        selected_items = self.catalog_table.selection()
+        if not selected_items:
+            messagebox.showwarning("Catalog", "Select one or more catalog apps first.")
+            return
+
+        for software_name in selected_items:
+            self.custom_vars.setdefault(software_name, tk.BooleanVar(value=False)).set(True)
+
+        self.tabs.select(self.custom_tab)
+        self.status_label.configure(text=f"Added {len(selected_items)} catalog app(s) to custom selection.")
+
+    def save_custom_profile(self) -> None:
+        package_names = [name for name, variable in self.custom_vars.items() if variable.get()]
+        if not package_names:
+            messagebox.showwarning("Profiles", "Select custom software before saving a profile.")
+            return
+
+        profile_name = simpledialog.askstring("Save Profile", "Profile name:", parent=self.root)
+        if not profile_name:
+            return
+
+        profile_name = profile_name.strip()
+        if not profile_name:
+            messagebox.showwarning("Profiles", "Profile name cannot be empty.")
+            return
+
+        if profile_name in self.profiles and not messagebox.askyesno(
+            "Save Profile",
+            f"Replace the existing '{profile_name}' profile?",
+        ):
+            return
+
+        self.profiles[profile_name] = package_names
+        save_profiles(self.profiles)
+        self.selected_profile.set(profile_name)
+        self._build_profile_panel()
+        self._select_profile(profile_name)
+        self.status_label.configure(text=f"Saved profile '{profile_name}' to blueprint.config.")
+
+    def delete_selected_profile(self) -> None:
+        protected_profiles = {"Developer", "Games", "AI"}
+        profile_name = self.selected_profile.get()
+        if profile_name in protected_profiles:
+            messagebox.showwarning("Profiles", f"'{profile_name}' is a built-in profile and cannot be deleted.")
+            return
+
+        if profile_name not in self.profiles:
+            return
+
+        if not messagebox.askyesno("Delete Profile", f"Delete the '{profile_name}' profile?"):
+            return
+
+        del self.profiles[profile_name]
+        save_profiles(self.profiles)
+        next_profile = next(iter(self.profiles), "")
+        self.selected_profile.set(next_profile)
+        self._build_profile_panel()
+        if next_profile:
+            self._select_profile(next_profile)
+        self.status_label.configure(text=f"Deleted profile '{profile_name}' from blueprint.config.")
+
     def _render_package_rows(self, package_names: list[str]) -> None:
         self.package_table.delete(*self.package_table.get_children())
         for package_name in package_names:
-            item = self.software_catalog[package_name]
+            item = self.software_catalog.get(package_name)
+            if item is None:
+                self.package_table.insert(
+                    "",
+                    "end",
+                    iid=package_name,
+                    values=(package_name, "missing", "missing", "Missing catalog entry"),
+                )
+                continue
+
             install_status = "Installed" if self.installed_status.get(package_name) else "Ready"
             self.package_table.insert(
                 "",
@@ -440,6 +654,19 @@ class SetupManager:
                 ),
             )
         self.status_label.configure(text=f"{len(package_names)} packages selected.")
+
+    def _ensure_packages_available(self, package_names: list[str]) -> None:
+        missing_packages = [package_name for package_name in package_names if package_name not in self.software_catalog]
+        if not missing_packages:
+            return
+
+        optional_catalog = load_optional_catalog(self.update_channel.get())
+        self.software_catalog.update(optional_catalog)
+        self.software_catalog = dict(sorted(self.software_catalog.items(), key=lambda item: item[0].lower()))
+        self.optional_catalog_loaded = True
+        self.optional_catalog_names.update(optional_catalog)
+        self._refresh_custom_checklist()
+        self._render_catalog_rows()
 
     def _installer_for(self, package_name: str) -> SoftwareInstaller:
         item = self.software_catalog[package_name]
