@@ -7,6 +7,8 @@ All notable changes to BasicSetup will be documented in this file.
 ### Added
 
 - Rebuilt the Tkinter GUI with profile selection, custom package selection, background installs, per-package status, and dry-run mode.
+- Added GUI update checks with a manual fast-forward update action.
+- Added installed-package detection and automatic skipping for packages already present on the machine.
 - Added `Games`, `Custom Play`, and `Developer Workstation` setup profiles.
 - Added Discord to the software catalog.
 - Added tests for core profile availability and GUI config loading.

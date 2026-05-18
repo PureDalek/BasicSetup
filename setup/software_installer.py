@@ -43,6 +43,28 @@ class SoftwareInstaller:
             raise RuntimeError(f"Command failed with exit code {error.returncode}: {command_text}") from error
 
     @staticmethod
+    def _run_command_for_output(command_arguments: list[str]) -> subprocess.CompletedProcess[str]:
+        """Run a command and return captured output without raising on non-zero exit codes."""
+        try:
+            return subprocess.run(
+                command_arguments,
+                check=False,
+                capture_output=True,
+                text=True,
+            )
+        except FileNotFoundError as error:
+            command_name = command_arguments[0]
+            raise RuntimeError(f"Required command was not found: {command_name}") from error
+
+    @staticmethod
+    def _package_id(package_name: Optional[str]) -> Optional[str]:
+        """Return the package id without installer-specific command arguments."""
+        if not package_name:
+            return None
+
+        return package_name.split()[0]
+
+    @staticmethod
     def _read_linux_distribution_info() -> dict[str, str]:
         """Read Linux distribution metadata from /etc/os-release."""
         os_release_path = Path("/etc/os-release")
@@ -101,6 +123,20 @@ class SoftwareInstaller:
             ]
         )
 
+    def _is_windows_package_installed(self) -> bool:
+        """Return whether the Chocolatey package is already installed."""
+        package_id = self._package_id(self.windows_package)
+        if not package_id or not shutil.which("choco"):
+            return False
+
+        result = self._run_command_for_output(
+            ["choco", "list", "--local-only", "--exact", package_id, "--limit-output"]
+        )
+        if result.returncode != 0:
+            return False
+
+        return any(line.lower().startswith(f"{package_id.lower()}|") for line in result.stdout.splitlines())
+
     def _add_linux_repo(self) -> None:
         """Add an apt repository before installing a package."""
         if not self.linux_repo:
@@ -137,6 +173,26 @@ class SoftwareInstaller:
         distribution_name = distribution_info.get("name", "unknown Linux distribution")
         raise RuntimeError(f"Unsupported Linux distribution: {distribution_name}")
 
+    def _is_linux_package_installed(self) -> bool:
+        """Return whether the configured Linux package appears to be installed."""
+        package_id = self._package_id(self.linux_package)
+        if not package_id:
+            return False
+
+        if self.is_snap and shutil.which("snap"):
+            result = self._run_command_for_output(["snap", "list", package_id])
+            return result.returncode == 0
+
+        if self._is_debian_like_distribution() and shutil.which("dpkg-query"):
+            result = self._run_command_for_output(["dpkg-query", "-W", "-f=${Status}", package_id])
+            return result.returncode == 0 and "install ok installed" in result.stdout
+
+        if self._is_fedora_like_distribution() and shutil.which("rpm"):
+            result = self._run_command_for_output(["rpm", "-q", package_id])
+            return result.returncode == 0
+
+        return False
+
     def install(self) -> None:
         """Install the software using the appropriate package manager."""
         current_operating_system = platform.system()
@@ -150,3 +206,15 @@ class SoftwareInstaller:
             return
 
         raise RuntimeError(f"Unsupported operating system: {current_operating_system}")
+
+    def is_installed(self) -> bool:
+        """Return whether the configured package appears to be installed on this machine."""
+        current_operating_system = platform.system()
+
+        if current_operating_system == "Windows":
+            return self._is_windows_package_installed()
+
+        if current_operating_system == "Linux":
+            return self._is_linux_package_installed()
+
+        return False

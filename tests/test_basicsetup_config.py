@@ -158,3 +158,66 @@ def test_windows_installer_uses_elevated_powershell_wrapper() -> None:
         "-File",
     ]
     assert command_arguments[-1] == "git"
+
+
+def test_windows_installed_check_uses_chocolatey_local_package_list() -> None:
+    """Verify Windows installed checks query Chocolatey's local package inventory."""
+    sys.path.insert(0, str(SETUP_DIRECTORY))
+
+    import software_installer
+    from software_installer import SoftwareInstaller
+
+    installer = SoftwareInstaller(
+        software_name="git",
+        windows_package="git",
+        linux_package="git",
+    )
+
+    completed_process = software_installer.subprocess.CompletedProcess(
+        args=[],
+        returncode=0,
+        stdout="git|2.51.0\n",
+        stderr="",
+    )
+
+    with (
+        patch.object(software_installer.platform, "system", return_value="Windows"),
+        patch.object(software_installer.shutil, "which", return_value="C:\\ProgramData\\chocolatey\\bin\\choco.exe"),
+        patch.object(installer, "_run_command_for_output", return_value=completed_process) as run_command_mock,
+    ):
+        assert installer.is_installed() is True
+
+    run_command_mock.assert_called_once_with(
+        ["choco", "list", "--local-only", "--exact", "git", "--limit-output"]
+    )
+
+
+def test_windows_installed_check_strips_package_arguments() -> None:
+    """Verify package options do not become part of the Chocolatey lookup id."""
+    sys.path.insert(0, str(SETUP_DIRECTORY))
+
+    import software_installer
+    from software_installer import SoftwareInstaller
+
+    installer = SoftwareInstaller(
+        software_name="Gimp",
+        windows_package="gimp --version=2.10.4",
+        linux_package="gimp",
+    )
+
+    completed_process = software_installer.subprocess.CompletedProcess(
+        args=[],
+        returncode=0,
+        stdout="gimp|2.10.4\n",
+        stderr="",
+    )
+
+    with (
+        patch.object(software_installer.platform, "system", return_value="Windows"),
+        patch.object(software_installer.shutil, "which", return_value="C:\\ProgramData\\chocolatey\\bin\\choco.exe"),
+        patch.object(installer, "_run_command_for_output", return_value=completed_process) as run_command_mock,
+    ):
+        assert installer.is_installed() is True
+
+    command_arguments = run_command_mock.call_args.args[0]
+    assert command_arguments[4] == "gimp"

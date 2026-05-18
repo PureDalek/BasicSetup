@@ -125,6 +125,13 @@ python .\setup\program_setup.py --dry-run
 
 The UI keeps profile installs and custom installs in the same status table. Package installs run in the background so the window remains responsive, and each package gets a final status.
 
+The GUI also checks for:
+
+- BasicSetup updates from the configured Git upstream.
+- Already installed packages through the local package manager.
+
+Installed packages are marked in the status table and skipped during install runs.
+
 ## Git auto-update launcher
 
 Use this when BasicSetup already exists locally as a Git checkout.
