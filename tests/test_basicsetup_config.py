@@ -10,6 +10,7 @@ REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 SETUP_DIRECTORY = REPOSITORY_ROOT / "setup"
 SOFTWARE_CONFIG_PATH = SETUP_DIRECTORY / "software.json"
 BLUEPRINT_CONFIG_PATH = SETUP_DIRECTORY / "blueprint.config"
+VERSION_PATH = REPOSITORY_ROOT / "VERSION"
 
 
 def load_json_config(config_path: Path) -> dict:
@@ -32,6 +33,15 @@ def test_blueprint_config_is_valid() -> None:
 
     assert isinstance(setup_blueprints, dict)
     assert setup_blueprints
+
+
+def test_version_file_is_available() -> None:
+    """Verify releases have a visible application version for the GUI."""
+    version = VERSION_PATH.read_text(encoding="utf-8").strip()
+
+    version_parts = version.split(".")
+    assert len(version_parts) == 3
+    assert all(part.isdigit() for part in version_parts)
 
 
 def test_all_blueprint_packages_exist_in_software_catalog() -> None:
@@ -105,6 +115,26 @@ def test_program_setup_loaders_use_script_directory_paths() -> None:
 
     assert "Visual Studio Code" in software_catalog
     assert "Games" in setup_profiles
+
+
+def test_program_setup_loads_application_version() -> None:
+    """Verify the GUI can load the tracked app version."""
+    sys.path.insert(0, str(SETUP_DIRECTORY))
+
+    import program_setup
+
+    assert program_setup.load_application_version() == VERSION_PATH.read_text(encoding="utf-8").strip()
+
+
+def test_program_setup_update_channels_map_to_expected_branches() -> None:
+    """Verify GUI update channel choices target the intended Git branches."""
+    sys.path.insert(0, str(SETUP_DIRECTORY))
+
+    import program_setup
+
+    assert program_setup.update_channel_branch("Stable") == "main"
+    assert program_setup.update_channel_branch("Nightly").startswith("codex/")
+    assert program_setup.update_channel_branch("Unknown") == "main"
 
 
 def test_linux_installer_uses_snap_for_snap_packages() -> None:

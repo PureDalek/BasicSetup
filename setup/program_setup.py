@@ -19,6 +19,11 @@ SCRIPT_DIRECTORY = Path(__file__).resolve().parent
 REPOSITORY_ROOT = SCRIPT_DIRECTORY.parent
 SOFTWARE_CONFIG_PATH = SCRIPT_DIRECTORY / "software.json"
 BLUEPRINT_CONFIG_PATH = SCRIPT_DIRECTORY / "blueprint.config"
+VERSION_PATH = REPOSITORY_ROOT / "VERSION"
+UPDATE_CHANNELS = {
+    "Stable": "main",
+    "Nightly": "codex/gui-version-update-improvements",
+}
 
 
 @dataclass(frozen=True)
@@ -66,52 +71,103 @@ def run_git_command(arguments: list[str]) -> subprocess.CompletedProcess[str]:
     )
 
 
-def check_repository_update_status() -> tuple[str, str]:
+def load_application_version(file_path: Path = VERSION_PATH) -> str:
+    if not file_path.exists():
+        return "0.0.0-dev"
+
+    version = file_path.read_text(encoding="utf-8").strip()
+    return version or "0.0.0-dev"
+
+
+def get_git_revision() -> str:
+    if not shutil.which("git") or not (REPOSITORY_ROOT / ".git").exists():
+        return "unknown"
+
+    revision_result = run_git_command(["rev-parse", "--short", "HEAD"])
+    if revision_result.returncode != 0:
+        return "unknown"
+
+    return revision_result.stdout.strip() or "unknown"
+
+
+def get_display_version() -> str:
+    version = load_application_version()
+    revision = get_git_revision()
+    if revision == "unknown":
+        return f"v{version}"
+
+    return f"v{version} ({revision})"
+
+
+def update_channel_branch(channel_name: str) -> str:
+    return UPDATE_CHANNELS.get(channel_name, UPDATE_CHANNELS["Stable"])
+
+
+def check_repository_update_status(channel_name: str = "Stable") -> tuple[str, str]:
     if not shutil.which("git"):
         return ("Unavailable", "Git was not found.")
 
     if not (REPOSITORY_ROOT / ".git").exists():
         return ("Unavailable", "This folder is not a Git checkout.")
 
+    local_version = load_application_version()
+    target_branch = update_channel_branch(channel_name)
     branch_result = run_git_command(["branch", "--show-current"])
     branch_name = branch_result.stdout.strip() or "current branch"
 
-    fetch_result = run_git_command(["fetch", "origin"])
+    fetch_result = run_git_command(["fetch", "origin", target_branch])
     if fetch_result.returncode != 0:
         return ("Failed", fetch_result.stderr.strip() or "Could not fetch from origin.")
 
-    upstream_result = run_git_command(["rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{u}"])
-    if upstream_result.returncode != 0:
-        return ("Unavailable", f"No upstream branch is configured for {branch_name}.")
-
-    upstream_name = upstream_result.stdout.strip()
-    count_result = run_git_command(["rev-list", "--left-right", "--count", f"HEAD...{upstream_name}"])
+    remote_branch = f"origin/{target_branch}"
+    count_result = run_git_command(["rev-list", "--left-right", "--count", f"HEAD...{remote_branch}"])
     if count_result.returncode != 0:
-        return ("Failed", count_result.stderr.strip() or "Could not compare with upstream.")
+        return ("Failed", count_result.stderr.strip() or f"Could not compare with {remote_branch}.")
 
     ahead_text, behind_text = count_result.stdout.split()
     ahead_count = int(ahead_text)
     behind_count = int(behind_text)
+    channel_label = f"{channel_name} ({target_branch})"
 
     if behind_count:
-        return ("Update available", f"{behind_count} commit(s) available from {upstream_name}.")
+        return (
+            "Update available",
+            f"{behind_count} commit(s) available on {channel_label}. Current version: v{local_version}.",
+        )
 
     if ahead_count:
-        return ("Up to date", f"{branch_name} is up to date and {ahead_count} local commit(s) ahead.")
+        return (
+            "Up to date",
+            f"v{local_version} on {branch_name} is up to date with {channel_label} and {ahead_count} local commit(s) ahead.",
+        )
 
-    return ("Up to date", f"{branch_name} is up to date with {upstream_name}.")
+    return ("Up to date", f"v{local_version} on {branch_name} is up to date with {channel_label}.")
 
 
-def update_repository() -> tuple[str, str]:
-    status, detail = check_repository_update_status()
+def update_repository(channel_name: str = "Stable") -> tuple[str, str]:
+    target_branch = update_channel_branch(channel_name)
+    remote_branch = f"origin/{target_branch}"
+    status, detail = check_repository_update_status(channel_name)
     if status != "Update available":
         return (status, detail)
 
-    pull_result = run_git_command(["pull", "--ff-only"])
-    if pull_result.returncode != 0:
-        return ("Failed", pull_result.stderr.strip() or "Could not fast-forward the repository.")
+    current_branch_result = run_git_command(["branch", "--show-current"])
+    current_branch = current_branch_result.stdout.strip()
+    if current_branch != target_branch:
+        local_branch_result = run_git_command(["show-ref", "--verify", "--quiet", f"refs/heads/{target_branch}"])
+        if local_branch_result.returncode == 0:
+            checkout_result = run_git_command(["checkout", target_branch])
+        else:
+            checkout_result = run_git_command(["checkout", "-B", target_branch, remote_branch])
 
-    return ("Updated", "BasicSetup was updated. Restart the GUI to load the new version.")
+        if checkout_result.returncode != 0:
+            return ("Failed", checkout_result.stderr.strip() or f"Could not switch to {target_branch}.")
+
+    pull_result = run_git_command(["pull", "--ff-only", "origin", target_branch])
+    if pull_result.returncode != 0:
+        return ("Failed", pull_result.stderr.strip() or f"Could not fast-forward from {remote_branch}.")
+
+    return ("Updated", f"BasicSetup was updated from {channel_name}. Restart the GUI to load the new version.")
 
 
 class SetupManager:
@@ -129,12 +185,15 @@ class SetupManager:
         self.result_queue: queue.Queue[tuple[str, str, str, str]] = queue.Queue()
         self.custom_vars: dict[str, tk.BooleanVar] = {}
         self.installed_status: dict[str, bool] = {}
+        self.display_version = get_display_version()
+        default_channel = "Nightly" if self._current_branch().startswith("codex/") else "Stable"
+        self.update_channel = tk.StringVar(value=default_channel)
         self.selected_profile = tk.StringVar(value=next(iter(self.profiles), ""))
         self.is_installing = False
         self.is_checking_installed = False
         self.is_checking_updates = False
 
-        self.root.title("BasicSetup")
+        self.root.title(f"BasicSetup {self.display_version}")
         self.root.geometry("920x640")
         self.root.minsize(820, 560)
         self.root.columnconfigure(0, weight=1)
@@ -146,10 +205,19 @@ class SetupManager:
         self.root.after(300, self.check_for_updates)
         self.root.after(600, self.check_installed_packages)
 
+    @staticmethod
+    def _current_branch() -> str:
+        branch_result = run_git_command(["branch", "--show-current"])
+        if branch_result.returncode != 0:
+            return ""
+
+        return branch_result.stdout.strip()
+
     def _configure_style(self) -> None:
         style = ttk.Style()
         style.configure("Title.TLabel", font=("Segoe UI", 20, "bold"))
         style.configure("Subtitle.TLabel", foreground="#4b5563")
+        style.configure("Version.TLabel", foreground="#4b5563", font=("Segoe UI", 10))
         style.configure("Profile.TButton", padding=(12, 10))
         style.configure("Accent.TButton", padding=(14, 10))
         style.configure("Status.TLabel", foreground="#374151")
@@ -164,7 +232,15 @@ class SetupManager:
         header.grid(row=0, column=0, columnspan=2, sticky="ew", pady=(0, 18))
         header.columnconfigure(0, weight=1)
 
-        ttk.Label(header, text="BasicSetup", style="Title.TLabel").grid(row=0, column=0, sticky="w")
+        title_row = ttk.Frame(header)
+        title_row.grid(row=0, column=0, sticky="w")
+
+        ttk.Label(title_row, text="BasicSetup", style="Title.TLabel").grid(row=0, column=0, sticky="w")
+        ttk.Label(
+            title_row,
+            text=self.display_version,
+            style="Version.TLabel",
+        ).grid(row=0, column=1, sticky="sw", padx=(10, 0), pady=(0, 3))
         ttk.Label(
             header,
             text="Pick a machine profile or build a custom install list for a fresh Windows setup.",
@@ -184,8 +260,18 @@ class SetupManager:
         self.update_status_label = ttk.Label(update_panel, text="Update: not checked", style="Status.TLabel")
         self.update_status_label.grid(row=0, column=0, sticky="e", padx=(0, 8))
 
-        self.update_check_button = ttk.Button(update_panel, text="Check Updates", command=self.check_for_updates)
-        self.update_check_button.grid(row=0, column=1, padx=(0, 8))
+        self.channel_selector = ttk.Combobox(
+            update_panel,
+            textvariable=self.update_channel,
+            values=tuple(UPDATE_CHANNELS),
+            state="readonly",
+            width=10,
+        )
+        self.channel_selector.grid(row=0, column=1, padx=(0, 8))
+        self.channel_selector.bind("<<ComboboxSelected>>", lambda _event: self.check_for_updates())
+
+        self.update_check_button = ttk.Button(update_panel, text="Check for Updates", command=self.check_for_updates)
+        self.update_check_button.grid(row=0, column=2, padx=(0, 8))
 
         self.update_button = ttk.Button(
             update_panel,
@@ -193,7 +279,7 @@ class SetupManager:
             command=self.update_now,
             state="disabled",
         )
-        self.update_button.grid(row=0, column=2)
+        self.update_button.grid(row=0, column=3)
 
         profile_panel = ttk.Frame(shell)
         profile_panel.grid(row=1, column=0, sticky="nsw", padx=(0, 18))
@@ -440,14 +526,15 @@ class SetupManager:
         self.is_checking_updates = True
         self.update_check_button.configure(state="disabled")
         self.update_button.configure(state="disabled")
-        self.update_status_label.configure(text="Update: checking...")
+        self.channel_selector.configure(state="disabled")
+        self.update_status_label.configure(text=f"Update: checking {self.update_channel.get()}...")
 
         worker = threading.Thread(target=self._check_for_updates, daemon=True)
         worker.start()
         self.root.after(100, self._drain_result_queue)
 
     def _check_for_updates(self) -> None:
-        status, detail = check_repository_update_status()
+        status, detail = check_repository_update_status(self.update_channel.get())
         self.result_queue.put(("update-check", "", status, detail))
 
     def update_now(self) -> None:
@@ -457,14 +544,15 @@ class SetupManager:
         self.is_checking_updates = True
         self.update_check_button.configure(state="disabled")
         self.update_button.configure(state="disabled")
-        self.update_status_label.configure(text="Update: updating...")
+        self.channel_selector.configure(state="disabled")
+        self.update_status_label.configure(text=f"Update: updating from {self.update_channel.get()}...")
 
         worker = threading.Thread(target=self._update_now, daemon=True)
         worker.start()
         self.root.after(100, self._drain_result_queue)
 
     def _update_now(self) -> None:
-        status, detail = update_repository()
+        status, detail = update_repository(self.update_channel.get())
         self.result_queue.put(("update-apply", "", status, detail))
 
     def _drain_result_queue(self) -> None:
@@ -499,6 +587,7 @@ class SetupManager:
             if event_type in {"update-check", "update-apply"}:
                 self.is_checking_updates = False
                 self.update_check_button.configure(state="normal")
+                self.channel_selector.configure(state="readonly")
                 self.update_button.configure(state="normal" if status == "Update available" else "disabled")
                 self.update_status_label.configure(text=f"Update: {status}")
                 self.status_label.configure(text=detail)
