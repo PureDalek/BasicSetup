@@ -137,6 +137,11 @@ Installed packages are marked in the status table and skipped during install run
 
 The window title and header show the tracked app version from `VERSION` plus the current Git commit when available.
 
+The update channel selector controls which Git branch is checked:
+
+- `Stable` checks `main`.
+- `Nightly` checks the Codex PR branch for in-progress builds.
+
 ## Git auto-update launcher
 
 Use this when BasicSetup already exists locally as a Git checkout.

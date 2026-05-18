@@ -7,6 +7,7 @@ All notable changes to BasicSetup will be documented in this file.
 ### Added
 
 - Added tracked app version display in the GUI and a root `VERSION` file.
+- Added GUI update channel selection with `Stable` mapped to `main` and `Nightly` mapped to the Codex PR branch.
 - Added `ROADMAP.md` with concrete next-step ideas for catalog editing, Git-backed saves, versioning, and safer installs.
 - Rebuilt the Tkinter GUI with profile selection, custom package selection, background installs, per-package status, and dry-run mode.
 - Added GUI update checks with a manual fast-forward update action.

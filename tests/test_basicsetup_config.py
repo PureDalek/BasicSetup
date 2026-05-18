@@ -126,6 +126,17 @@ def test_program_setup_loads_application_version() -> None:
     assert program_setup.load_application_version() == VERSION_PATH.read_text(encoding="utf-8").strip()
 
 
+def test_program_setup_update_channels_map_to_expected_branches() -> None:
+    """Verify GUI update channel choices target the intended Git branches."""
+    sys.path.insert(0, str(SETUP_DIRECTORY))
+
+    import program_setup
+
+    assert program_setup.update_channel_branch("Stable") == "main"
+    assert program_setup.update_channel_branch("Nightly").startswith("codex/")
+    assert program_setup.update_channel_branch("Unknown") == "main"
+
+
 def test_linux_installer_uses_snap_for_snap_packages() -> None:
     """Verify Linux snap packages call snap instead of apt."""
     sys.path.insert(0, str(SETUP_DIRECTORY))

@@ -20,6 +20,7 @@ These are practical next steps that fit the current project shape.
 - Update `VERSION` for each release-worthy GUI or installer change.
 - Use tags that match `VERSION`, for example `v0.2.0`.
 - Show both the release version and Git commit in the GUI so support/debugging reports identify the exact build.
+- Keep `Stable` updates on `main` and use the Codex PR branch as the `Nightly` update channel.
 
 ## Safer installs
 
